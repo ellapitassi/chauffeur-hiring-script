@@ -111,23 +111,42 @@ function checkDailyDriverStats(driverId) {
       return existingId === driverId && existingBase === baseConvo;
     });
   }
-  
-  // function deleteMassTextRowByUniqueId(uniqueId) {
-  //   const sheet = CONFIG.sheets.textGeorge;
-  //   const rows = sheet.getRange("A4:G").getValues();
-  
-  //   for (let i = 0; i < rows.length; i++) {
-  //     if (rows[i][4] === uniqueId) {  // index 4 = column E
-  //       sheet.deleteRow(i + 4); // +4 to offset A4 starting point
-  //       Logger.log(`Deleted row with uniqueId: ${uniqueId}`);
-  //       return;
-  //     }
-  //   }
-  
-  //   Logger.log(`Could not find row with uniqueId: ${uniqueId}`);
-  // }
 
+  function getSentTextRows(sentTextsSheetOverride = null) {
+    const sheet = sentTextsSheetOverride || CONFIG.sheets.sentTexts;
+    const lastRow = sheet.getLastRow();
+    Logger.log(`🧪 sentTexts lastRow: ${lastRow}`);
+    if (lastRow > 3) {
+      const values = sheet.getRange(4, 1, lastRow - 3, 4).getValues();
+      Logger.log(`🧪 sentTexts first row: ${JSON.stringify(values[0])}`);
+      return values;
+    }
+    return [];
+  }
+  
   function formatInChicagoTime(isoString) {
     const date = new Date(isoString);
     return Utilities.formatDate(date, 'America/Chicago', 'MM/dd/yyyy h:mm a');
+  }
+
+  function alreadyTextedConvo(driverId, convoName, sentTextRows) {
+    const baseConvo = convoName.split('_').slice(0, -1).join('_');
+    return sentTextRows.some(row => {
+      const existingId = row[1]?.toString().trim();    // Column B = driverId
+      const existingConvo = row[2]?.toString().trim(); // Column C = convo_name
+      const existingBase = existingConvo?.split('_').slice(0, -1).join('_');
+      Logger.log(`existingBase: ${existingBase}, baseConvo ${baseConvo}`)
+      return existingId === driverId && existingBase === baseConvo;
+    });
+  }
+
+  function setOutreachDates(sheet, rowIdx, colFirst, colLast, date) {
+    sheet.getRange(rowIdx, colFirst + 1).setValue(date);
+    sheet.getRange(rowIdx, colLast + 1).setValue(date);
+  }
+
+  function getFormattedESTTimestamp() {
+    const now = new Date();
+    const formatted = Utilities.formatDate(now, "America/New_York", "yyyy-MM-dd HH:mm:ss");
+    return `${formatted} EST`;
   }

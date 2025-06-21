@@ -37,27 +37,6 @@ function test_handleFormSubmission() {
   handleFormSubmission(fakeEvent);
 }
 
-// function test_deleteMassTextRowByUniqueId() {
-//   const sheet = CONFIG.sheets.textGeorge;
-
-//   // Step 1: Insert a test row with a known uniqueId
-//   const testRow = ['TEST_DRIVER_ID', 'text', 'convo_name', '', 'UNIQUE_TEST_ID_123'];
-//   sheet.appendRow(testRow);
-//   Logger.log("✅ Test row added");
-
-//   // Step 2: Run the deletion function
-//   deleteMassTextRowByUniqueId('UNIQUE_TEST_ID_123');
-
-//   // Step 3: Verify it's gone
-//   const data = sheet.getRange("A4:G").getValues();
-//   const stillExists = data.some(row => row[6] === 'UNIQUE_TEST_ID_123');
-
-//   if (stillExists) {
-//     Logger.log("Test failed: Row with unique ID still exists");
-//   } else {
-//     Logger.log("Test passed: Row was successfully deleted");
-//   }
-// }
 
 function test_manualSendTextToElla() {
   const testDriverId = "PITASSI_ELLA_83333"; 

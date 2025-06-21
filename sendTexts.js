@@ -48,6 +48,7 @@ function sendText(driverId) {
     }
 }
 
+// checks for successfully sent texts and removes them from the queue
 function markTextedInGeorgeSheet() {
     Logger.log("in markTextedInGeorgeSheet")
     // ⏱️ Check if 5 minutes have passed since start
@@ -116,7 +117,9 @@ function markTextedInGeorgeSheet() {
     }
 }
 
+// background job that checks if messages in textGeorge have been sent (by comparing to sentTexts).
 function findSendTextRow() {
+    Logger.log("in findSendTextRow")
     const props = PropertiesService.getScriptProperties();
     props.setProperty('startTime', new Date().toISOString());
     // Create a time-based trigger to run every minute
@@ -127,6 +130,10 @@ function findSendTextRow() {
 }
 
 function queueText(driverId, message, convoName) {
+    if (!FLAGS.ENABLE_TEXTING) {
+        Logger.log(`🧪 [DISABLED] Would queue text for ${driverId}: "${text}" (${convoName})`);
+        return;
+      }
     const textGeorgeSheet = CONFIG.sheets.textGeorge;
   
     if (!driverId || !message) {
@@ -153,13 +160,33 @@ function queueText(driverId, message, convoName) {
 }
 
 function sendAllTexts() {
+    const sheet = CONFIG.sheets.textGeorge;
+  
+    if (!FLAGS.ENABLE_TEXTING) {
+      Logger.log("🧪 Texting disabled — simulating send");
+  
+      const lastRow = sheet.getLastRow();
+      if (lastRow > 3) {
+        const range = sheet.getRange(4, 4, lastRow - 3); // Col D
+        const toBeRemovedValues = range.getValues().map(() => ["TO BE REMOVED"]);
+        range.setValues(toBeRemovedValues);
+  
+        for (let i = lastRow; i >= 4; i--) {
+          sheet.deleteRow(i);
+        }
+      }
+  
+      return;
+    }
+  
+    // ✅ Real texting logic
     const url = `https://george-api-production.drivesally.com/api/reports/run_report/?report=text_lucid_driver_report&key=george`;
     const options = { muteHttpExceptions: true };
   
     try {
       const response = UrlFetchApp.fetch(url, options);
       if (response.getResponseCode() === 200) {
-        Logger.log("George text API triggered successfully.");
+        Logger.log("📤 George text API triggered successfully.");
       } else {
         logError("system", `George API failed with status: ${response.getResponseCode()}`);
       }

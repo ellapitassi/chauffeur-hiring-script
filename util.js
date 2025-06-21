@@ -53,3 +53,9 @@ function logDetailedError({ driverId = "", message, context = "", details = "" }
 function markTextSent(rowNumber) {
     CONFIG.sheets.textGeorge.getRange(rowNumber, 5).setValue(true);
 }
+
+function logDuplicateTextAttempt(driverId, convoName) {
+  const sheet = CONFIG.sheets.errors; 
+  const now = Utilities.formatDate(new Date(), "America/Chicago", "yyyy-MM-dd HH:mm");
+  sheet.appendRow([now, driverId, convoName, "Duplicate text skipped"]);
+}

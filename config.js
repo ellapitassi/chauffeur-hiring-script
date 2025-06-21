@@ -1,6 +1,6 @@
 const today = Utilities.formatDate(new Date(), "America/Chicago", "yyyyMMdd");
 const FLAGS = {
-    ENABLE_TEXTING: true,
+    ENABLE_TEXTING: false,
     ENABLE_CALENDLY_INTEGRATION: true,
     // Add more as needed
   };

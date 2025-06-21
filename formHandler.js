@@ -68,7 +68,6 @@ function handleFormSubmission(e) {
 
     if (textSentSuccess) {
       updateCandidateRowSentText(driverId, "PASS")
-      // deleteMassTextRowByUniqueId(uniqueId); // whats this for?
       // runPrescreenFollowUp(); 
     }
   } else {
