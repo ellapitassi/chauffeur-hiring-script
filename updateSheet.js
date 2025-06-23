@@ -29,10 +29,9 @@ function updateCandidateRowSentText(driverId, status, hasLicense = null) {
     }
 
     Logger.log(`Updated candidate pipeline row ${targetRow} for Driver ID ${driverId}`);
-  }
+}
 
-
-  function updateCandidateRowInterviewStatusByEmail(email, type, dateTime = null) {
+function updateCandidateRowInterviewStatusByEmail(email, type, dateTime = null) {
     const candidatePipeline = CONFIG.sheets.candidatePipeline;
     const errorLog = CONFIG.sheets.errorLog;
     const emailCol = 7; // Column G
@@ -57,4 +56,4 @@ function updateCandidateRowSentText(driverId, status, hasLicense = null) {
     }
   
     Logger.log(`Updated interview status for email ${email} to ${type}`);
-  }
+}

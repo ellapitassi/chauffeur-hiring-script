@@ -2,8 +2,10 @@ const today = Utilities.formatDate(new Date(), "America/Chicago", "yyyyMMdd");
 const FLAGS = {
     ENABLE_TEXTING: false,
     ENABLE_CALENDLY_INTEGRATION: true,
+    IN_TEST_MODE: false
     // Add more as needed
   };
+
 const CONFIG = {
   sheetColumns: {
     COLUMN_PASS: 16,  // Q

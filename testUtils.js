@@ -23,3 +23,13 @@ function expectEqual(actual, expected, message, context = "test") {
       Logger.log(`pass: ${message}`);
     }
   }
+
+  function expectFalse(value, message) {
+    if (value) {
+      throw new Error(`❌ ${message}`);
+    } else {
+      Logger.log(`pass: ${message}`);
+    }
+  }
+
+  

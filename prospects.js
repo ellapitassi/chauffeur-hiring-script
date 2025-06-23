@@ -136,6 +136,7 @@ function waitForDriverIDs(prospectsSheet, rowsToCheck, timeoutMs = 3 * 60 * 1000
     }
   }
 
+// Purpose: Copies valid P–AA data from Prospects → Candidate Pipeline, then calls processNewCandidatesFromRows.
 function appendToCandidatePipelineFromProspects(rows) {
     const { candidatePipeline } = getSheets();
 
@@ -144,20 +145,37 @@ function appendToCandidatePipelineFromProspects(rows) {
     const endCol = 27;   // Column AA
     const slicedRows = rows.map(row => row.slice(startCol - 1, endCol + 1)); // inclusive of P to AA
 
-    // Find first empty row in column B
+    const validRows = [];
+    let skippedCount = 0;  
+
+    // Filter out rows with missing driverId (column J in slice from P-AA = index 8)
+    slicedRows.forEach((row, i) => {
+      const driverId = row[8]; // Column X = index 8 in slice
+      if (driverId && driverId.toString().trim() !== "") {
+        validRows.push(row);
+      } else {
+        skippedCount++;
+        logError(`ERROR: Skipping row ${i + 1} from Prospects — missing driverId in column X`);
+      }
+    });
+
+    if (validRows.length === 0) {
+      logError("ERROR: No valid rows to append — all rows missing driverId.");
+      return;
+    }
+
+    // Find first empty row in candidate pipeline (looking in column B)
     const colBValues = candidatePipeline.getRange(2, 2, candidatePipeline.getLastRow() - 1).getValues();
     let pipelineStartRow = colBValues.findIndex(row => !row[0] || row[0].toString().trim() === "");
     pipelineStartRow = pipelineStartRow === -1 ? candidatePipeline.getLastRow() + 1 : pipelineStartRow + 2;
 
-    Logger.log("First row to paste: " + JSON.stringify(slicedRows[0]));
-    Logger.log("Number of columns: " + slicedRows[0].length);
+    // Write valid rows into Candidate Pipeline (B–M)
+    candidatePipeline.getRange(pipelineStartRow, 2, validRows.length, validRows[0].length).setValues(validRows);
+    logError(`Appended ${validRows.length} valid row(s) to Candidate Pipeline from PROSPECTS.`);
+    if (skippedCount > 0) logError(`⏭ Skipped ${skippedCount} row(s) due to missing driverId.`);
 
-    // Write into columns B to M
-    candidatePipeline.getRange(pipelineStartRow, 2, slicedRows.length, slicedRows[0].length).setValues(slicedRows);
-    Logger.log(`✅ Appended ${slicedRows.length} rows to Candidate Pipeline from PROSPECTS.`);
-
-    // Process the new candidates immediately after adding
-    processNewCandidatesFromRows(pipelineStartRow, slicedRows.length);
+    // Run processing logic on new rows
+    processNewCandidatesFromRows(pipelineStartRow, validRows.length);
 }
 
 function deleteProspectsRows(rowsToCheck) {

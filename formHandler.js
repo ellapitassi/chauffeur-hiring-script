@@ -45,8 +45,13 @@ function handleFormSubmission(e) {
     const colC = candidateRow[2];  // Column C (index 2), Chauffeur License
     if (colO !== "Pass" && colC !== "YES") {
       Logger.log(`Sending rejection for ${driverId} with convo: ${CONFIG.convoNames.prescreen_reject}`);
-      sendRejectionText(driverId, CONFIG.convoNames.prescreen_reject, CONFIG.texts.prescreenReject);
-      Logger.log("✅ Rejection text should be sent to " + driverId);
+      if (FLAGS.ENABLE_TEXTING) {
+        Logger.log(`Sending rejection for ${driverId} with convo: ${CONFIG.convoNames.prescreen_reject}`);
+        sendRejectionText(driverId, CONFIG.convoNames.prescreen_reject, CONFIG.texts.prescreenReject);
+        logError(driverId, "✅ Rejection text should be sent to ");
+      } else {
+        logError("🚫 Texting disabled — rejection text not sent.");
+      }
     }
     return;
   }

@@ -89,3 +89,49 @@ sendRejectionText - adds the row, does checks then calls sendText
     2. STARTED on the scheduling stuff - the remit in particular but not done.
 
     3. more changes to master
+
+
+processNewCandidatesOneAtATime()
+└── queues 1+ drivers → groupedQueue
+    └── flushQueueOneAtATime()
+        ├── writes to textGeorge
+        ├── triggers send
+        ├── waits for row to be deleted
+        └── processes next driver
+
+
+appendToCandidatePipelineFromProspects(rows)
+→ processNewCandidatesFromRows()
+   → addToGroupedQueue()
+→ flushQueueOneAtATime()
+   → flushSingleGroup()
+   → sendAllTexts()
+   → updateCandidateAfterText()
+   
+
+
+1. Paste Uber export into "Prospects" tab (manual)
+2. Script reads and slices columns P–AA (appendToCandidatePipelineFromProspects)
+3. Filters out rows missing Driver ID (col X)
+4. Appends clean rows to Candidate Pipeline
+5. Immediately calls processNewCandidatesFromRows → Stage 1 begins 
+
+
+doGet()
+  └── handleNewProspects()
+        ├── gets driverIds
+        ├── triggerGeorgeReport()
+        ├── waitForDriverIDs()
+        ├── appendToCandidatePipelineFromProspects()
+              ├── slice P–AA
+              ├── filter valid rows
+              ├── insert into Candidate Pipeline
+              └── processNewCandidatesFromRows()
+                    ├── handlePass / handleFail / handleBlacklisted
+                    └── flushQueueOneAtATime()
+
+doPost(e)
+  ├── parseCalendlyPayload()
+  ├── checkDuplicates()
+  ├── updateCandidateRowInterviewStatusByEmail(email, "created", startTime)
+  └── or updateCandidateRowInterviewStatusByEmail(email, "canceled")

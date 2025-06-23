@@ -211,3 +211,220 @@ function setRow(overrides) {
     }
     return row;
 }
+
+function test_processNewCandidate_pass() {
+    const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
+    const candidateSheet = ss.insertSheet("Test_Pass_Candidate");
+    const textGeorge = ss.insertSheet("Test_Pass_TextGeorge");
+  
+    try {
+      // Headers (2 empty + actual header row) and test row
+      const blankRow = Array(28).fill("");
+      const testRow = [
+        "", "Pending", "", "", "", "", "", "", "", "TEST_ID_123", "", "", "", "", "", "Pass", "",
+        "", "", "", "", "", "", "", "", "", "", ""
+      ];
+      
+      candidateSheet.getRange(1, 1, 4, 28).setValues([
+        blankRow,
+        blankRow,
+        blankRow,
+        testRow
+      ]);
+      FLAGS.IN_TEST_MODE = true;
+  
+      processNewCandidatesFromRows(4, 1, candidateSheet, textGeorge);
+  
+      const resultRow = candidateSheet.getRange(4, 2, 1, 28).getValues()[0]; // Start at col B
+  
+      expectEqual(resultRow[0], "Pending", "Status should be 'Pending'");
+      expectEqual(resultRow[21], "Pending", "Prescreen Results should be 'Pending'");
+  
+      const numRows = textGeorge.getLastRow() - 3;
+      const georgeData = numRows > 0
+        ? textGeorge.getRange(4, 1, numRows, 3).getValues()
+        : [];
+      
+    const wasQueued = georgeData.some(row =>
+        row[0] === "TEST_ID_123" &&
+        row[1]?.includes("Thanks for your interest in the Drive Sally Chauffeur team") &&
+        row[2] === CONFIG.convoNames.prescreenFormText
+        );
+  
+      expectTrue(wasQueued, "TextGeorge should have correct row queued");
+  
+      Logger.log("✅ test_processNewCandidate_pass passed");
+    } finally {
+    //   ss.deleteSheet(candidateSheet);
+    //   ss.deleteSheet(textGeorge);
+      FLAGS.IN_TEST_MODE = false;
+    }
+  }
+
+function test_processNewCandidates_batch() {
+    FLAGS.IN_TEST_MODE = true;
+    logError("🧪 Running test_processNewCandidates_batch");
+  
+    const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
+    const tempCandidateSheet = ss.insertSheet("TempCandidate_Batch");
+    const tempGeorgeSheet = ss.insertSheet("TempGeorge_Batch");
+  
+    try {
+      // Set test rows: row 4: Pass, row 5: Fail, row 6: Blacklisted
+      const testRows = [
+        ["", "Pending", "", "", "", "", "", "", "", "TEST_ID_123", "", "", "", "", "", "Pass", "", "", "", "", "", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", "", "FAIL_ID", "", "", "", "", "", "Fail", "", "", "", "", "", "", "", "", "", "", "", ""],  // row 5
+        ["", "", "", "", "", "", "", "", "", "BLACKLISTED_ID", "", "", "", "", "", "Pass", "", "", "", "", "", "", "", "", "", "", "", ""]  // row 6
+      ];
+  
+      // Set PASS_FAIL col (P = index 15) to "Pass", "Fail", and "Pass"
+      Logger.log(testRows[0][15])
+      Logger.log(testRows[1][15])
+      Logger.log(testRows[2][15])
+
+      testRows[0][15] = "Pass";
+      testRows[1][15] = "Fail";
+      testRows[2][15] = "Pass";
+  
+      tempCandidateSheet.getRange(4, 1, 3, 28).setValues(testRows);
+  
+      // Mock checkDailyDriverStats: Only last one is blacklisted
+      const mockCheckStatus = (id) => id === "BLACKLISTED_ID" ? "BLACKLISTED" : "";
+  
+      function simulateSendAndClearTextGeorge(sheet) {
+        const lastRow = sheet.getLastRow();
+        if (lastRow > 3) {
+          sheet.deleteRows(4, lastRow - 3);
+        }
+      }
+
+      const fakeCheckDriverStats = (driverId) => {
+        if (driverId === "BLACKLISTED_ID") return "BLACKLISTED";
+        return "";
+      };
+
+      processNewCandidatesFromRows(
+        4, 3,
+        tempCandidateSheet,
+        tempGeorgeSheet,
+        null,
+        fakeCheckDriverStats,
+        // simulateSendAndClearTextGeorge // ✅ testCleanupHook
+      );
+  
+      // === ASSERTIONS ===
+      const values = tempCandidateSheet.getRange(4, 1, 3, 28).getValues();
+  
+      // Row 4 = PASS_ID
+      expectEqual(values[0][1], "Pending", "TEST_ID_123 should be Pending");
+      expectEqual(values[0][22], "Pending", "TEST_ID_123 prescreen results should be Pending");
+  
+      // Row 5 = FAIL_ID
+      expectEqual(values[1][1], "Rejected", "FAIL_ID should be Rejected");
+  
+      // Row 6 = BLACKLISTED_ID
+      expectEqual(values[2][1], "Rejected", "BLACKLISTED_ID should be Rejected");
+      expectTrue(values[2][27].includes("BLACKLISTED"), "BLACKLISTED_ID notes should mention blacklist");
+
+      // TEXT GEORGE check
+      const rowCount = tempGeorgeSheet.getLastRow() - 3;
+      const georgeData = rowCount > 0
+        ? tempGeorgeSheet.getRange(4, 1, rowCount, 3).getValues()
+        : [];
+          
+      const passQueued = georgeData.some(row =>
+        row[0] === "TEST_ID_123" &&
+        row[1] === CONFIG.texts.prescreenFormTextToSend &&
+        row[2] === CONFIG.convoNames.prescreenFormText
+      );
+  
+      const failQueued = georgeData.some(row =>
+        row[0] === "FAIL_ID" &&
+        row[1] === CONFIG.texts.baseCriteriaRejectText &&
+        row[2] === CONFIG.convoNames.initial_criteria_reject
+      );
+  
+      const blacklistQueued = georgeData.some(row =>
+        row[0] === "BLACKLISTED_ID" &&
+        row[1] === CONFIG.texts.blacklistReject &&
+        row[2] === CONFIG.convoNames.blacklist_reject
+      );
+  
+      expectTrue(passQueued, "PASS_ID should be queued in TextGeorge");
+      expectTrue(failQueued, "FAIL_ID should be queued in TextGeorge");
+      expectTrue(blacklistQueued, "BLACKLISTED_ID should be queued in TextGeorge");
+
+      // After all expectTrue checks
+const lastRow = tempGeorgeSheet.getLastRow();
+if (lastRow > 3) {
+  tempGeorgeSheet.deleteRows(4, lastRow - 3);
+}
+  
+      logError("✅ test_processNewCandidates_batch passed");
+  
+    } finally {
+      ss.deleteSheet(tempCandidateSheet);
+      ss.deleteSheet(tempGeorgeSheet);
+    FLAGS.IN_TEST_MODE = false;
+    }
+  }
+
+
+  function test_processNewCandidates_batch_stepwise() {
+    logError("🧪 Running test_processNewCandidates_batch_stepwise");
+  
+    const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
+    const tempCandidateSheet = ss.insertSheet("TempCandidate_Batch");
+    const tempGeorgeSheet = ss.insertSheet("TempGeorge_Batch");
+  
+    try {
+      // Prepare rows: Pass, Fail, Blacklisted
+      const testRows = [
+        ["", "Pending", "", "", "", "", "", "", "", "TEST_ID_123", "", "", "", "", "", "Pass", "", "", "", "", "", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", "", "FAIL_ID", "", "", "", "", "", "Fail", "", "", "", "", "", "", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", "", "", "", "BLACKLISTED_ID", "", "", "", "", "", "Pass", "", "", "", "", "", "", "", "", "", "", "", ""]
+      ];
+  
+      tempCandidateSheet.getRange(4, 1, 3, 28).setValues(testRows);
+  
+      const fakeCheckDriverStats = (id) => id === "BLACKLISTED_ID" ? "BLACKLISTED" : "";
+  
+      // Step 1: Queue and flush first row only
+      processNewCandidatesFromRows(4, 1, tempCandidateSheet, tempGeorgeSheet, null, fakeCheckDriverStats);
+  
+      let data = tempGeorgeSheet.getRange(4, 1, tempGeorgeSheet.getLastRow() - 3, 3).getValues();
+      expectEqual(data.length, 1, "Step 1: Should have 1 message queued");
+      expectEqual(data[0][0], "TEST_ID_123", "Step 1: Should queue PASS_ID");
+  
+      // Clear textGeorge to simulate message sent
+      if (tempGeorgeSheet.getLastRow() > 3) {
+        tempGeorgeSheet.deleteRows(4, tempGeorgeSheet.getLastRow() - 3);
+      }
+  
+      // Step 2: Queue and flush second row (FAIL_ID)
+      processNewCandidatesFromRows(5, 1, tempCandidateSheet, tempGeorgeSheet, null, fakeCheckDriverStats);
+  
+      data = tempGeorgeSheet.getRange(4, 1, tempGeorgeSheet.getLastRow() - 3, 3).getValues();
+      expectEqual(data.length, 1, "Step 2: Should have 1 message queued");
+      expectEqual(data[0][0], "FAIL_ID", "Step 2: Should queue FAIL_ID");
+  
+      // Clear again
+      if (tempGeorgeSheet.getLastRow() > 3) {
+        tempGeorgeSheet.deleteRows(4, tempGeorgeSheet.getLastRow() - 3);
+      }
+  
+      // Step 3: Queue and flush third row (BLACKLISTED_ID)
+      processNewCandidatesFromRows(6, 1, tempCandidateSheet, tempGeorgeSheet, null, fakeCheckDriverStats);
+  
+      data = tempGeorgeSheet.getRange(4, 1, tempGeorgeSheet.getLastRow() - 3, 3).getValues();
+      expectEqual(data.length, 1, "Step 3: Should have 1 message queued");
+      expectEqual(data[0][0], "BLACKLISTED_ID", "Step 3: Should queue BLACKLISTED_ID");
+  
+      logError("✅ test_processNewCandidates_batch_stepwise passed");
+  
+    } finally {
+      // Uncomment if you want cleanup
+      ss.deleteSheet(tempCandidateSheet);
+      ss.deleteSheet(tempGeorgeSheet);
+    }
+  }

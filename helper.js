@@ -140,10 +140,7 @@ function checkDailyDriverStats(driverId) {
     });
   }
 
-  function setOutreachDates(sheet, rowIdx, colFirst, colLast, date) {
-    sheet.getRange(rowIdx, colFirst + 1).setValue(date);
-    sheet.getRange(rowIdx, colLast + 1).setValue(date);
-  }
+
 
   function getFormattedESTTimestamp() {
     const now = new Date();
