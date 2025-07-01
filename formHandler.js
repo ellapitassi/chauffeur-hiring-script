@@ -64,7 +64,6 @@ function handleFormSubmission(e) {
 
   const existingRows = CONFIG.sheets.textGeorge.getRange("A4:C").getValues();
   const isDuplicate = hasSentSimilarConvo(driverId, CONFIG.convoNames.interviewText, existingRows);
-  const uniqueId = appendMassTextRow(driverId, statusNote)
   SpreadsheetApp.flush(); // Ensure row is committed before continuing
 
   // FOR TESTING ADD THIS && driverId === "PITASSI_ELLA_83333"

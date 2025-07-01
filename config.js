@@ -33,6 +33,10 @@ We’re very interested in your Chauffeur application. However, there’s an out
     interviewTextToSend: `Success! You’ve passed our prescreen.
 Next step: Book your in-person interview at Drive Sally Chicago (1270 S Kostner Ave).
 Schedule here: https://calendly.com/drive-sally/fleet-chauffeur-group-interview`,
+    interviewFirstFollowup: `Just a reminder to book your in-person interview at Drive Sally Chicago (1270 S Kostner Ave):
+https://calendly.com/drive-sally/fleet-chauffeur-group-interview
+
+If you’re no longer interested, just let us know. Otherwise, we’re looking forward to meeting you!`,
     baseCriteriaRejectText: `[DRIVE SALLY]
 Thank you for your interest in the Chauffeur team. At this time, your profile does not meet the initial requirements for our Chauffeur program. If you’d like to explore other vehicle options, reply YES to learn more.`
   },
@@ -43,7 +47,8 @@ Thank you for your interest in the Chauffeur team. At this time, your profile do
     prescreenThirdOutreach: `Chauffeur_form3_${today}`,
     initial_criteria_reject: `Chauffeur_base_reject_${today}`,
     prescreen_reject:  `Chauffeur_prescreen_reject_${today}`,
-    blacklist_reject: `Chauffeur_blacklist_reject_${today}`
+    blacklist_reject: `Chauffeur_blacklist_reject_${today}`,
+    interview_followup_1:  `Chauffeur_interview2_${today}`
   },
   sheetIds: {
     formResponses: '1Y_STyBMkrjny5XXUIfKx7T8BibTMvJJGyF5BeBMujmA',

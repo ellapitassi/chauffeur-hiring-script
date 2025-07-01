@@ -130,8 +130,30 @@ doGet()
                     ├── handlePass / handleFail / handleBlacklisted
                     └── flushQueueOneAtATime()
 
+
+                processNewCandidatesFromRows()
+                ├── For each row:
+                │     ├── Get driverId
+                │     ├── Get text from row
+                │     ├── Get convo name from row
+                │     └── Add to deduped queue (by driverId)
+                └── Flush deduped queue to TEXT GEORGE
+
 doPost(e)
   ├── parseCalendlyPayload()
   ├── checkDuplicates()
   ├── updateCandidateRowInterviewStatusByEmail(email, "created", startTime)
   └── or updateCandidateRowInterviewStatusByEmail(email, "canceled")
+
+
+  onFormSubmit(e)
+  └── handleFormSubmission(e)
+        ├── Parse submitted row
+        ├── Check if PASS (Q = 1) and valid ID (K = ID)
+        ├── If FAIL or invalid ID:
+        │     └── Find candidate row → check for override
+        │           └── if no override & no license: write rejection text to textGeorge
+        └── If PASS:
+              ├── Check pipeline
+              ├── Call appendMassTextRow() for interview/convo
+              └── (Previously sent directly — now queued)

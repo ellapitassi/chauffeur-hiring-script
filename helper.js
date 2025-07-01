@@ -76,20 +76,6 @@ function checkDailyDriverStats(driverId) {
     return true;
   }
   
-  function appendMassTextRow(driverId, statusNote) {
-    const sheet = CONFIG.sheets.textGeorge;
-    const lastRow = sheet.getLastRow() + 1;
-    const uniqueId = `${driverId}_${Date.now()}`;
-    sheet.appendRow([
-      driverId,
-      CONFIG.texts.interviewTextToSend,
-      CONFIG.convoNames.interviewText,
-      statusNote, // col F,
-      uniqueId
-    ]);
-    return uniqueId;
-  }
-  
   function checkIfDriverIdExistsInCandidatePipeline(driverId) {
     const candidatePipeline = CONFIG.sheets.candidatePipeline;
     const data = candidatePipeline.getRange("J2:J").getValues().flat();
