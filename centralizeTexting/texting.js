@@ -1,6 +1,6 @@
 function sendAllTexts(sheet = CONFIG.sheets.textGeorge) {
     if (!FLAGS.ENABLE_TEXTING) {
-      Logger.log("🧪 Texting disabled — simulating send");
+      logError("🧪 Texting disabled — simulating send");
   
       const lastRow = sheet.getLastRow();
       const numRows = lastRow - 3;
@@ -28,8 +28,8 @@ function sendAllTexts(sheet = CONFIG.sheets.textGeorge) {
     try {
       const response = UrlFetchApp.fetch(url, options);
       if (response.getResponseCode() === 200) {
-        Logger.log("📤 George text API triggered successfully.");
-        findSendTextRow(); // ✅ This starts the post-send cleanup
+        logError("📤 George text API triggered successfully.");
+        // findSendTextRow(); // ✅ This starts the post-send cleanup NEW
       } else {
         logError("system", `ERROR: George API failed with status: ${response.getResponseCode()}`);
       }
@@ -39,6 +39,62 @@ function sendAllTexts(sheet = CONFIG.sheets.textGeorge) {
 }
 
 
+
+function markTextedInGeorgeSheetOnce(
+  textGeorgeSheet = CONFIG.sheets.textGeorge,
+  sentTextsSheet = CONFIG.sheets.sentTexts
+) {
+  logError("✅ Running markTextedInGeorgeSheet cleanup");
+
+  const toTextData = textGeorgeSheet.getDataRange().getValues();
+  const sentTextsData = sentTextsSheet.getDataRange().getValues();
+
+  if (!FLAGS.ENABLE_TEXTING) {
+      logError("⚠️ Texting is disabled — simulating all rows as sent");
+      // ⚠️ SAFETY: Only allow deletion if sheet name includes "Temp" (test)
+      if (!textGeorgeSheet.getName().includes("Temp")) {
+        logError(`⚠️ Safety check FAILED — TEXT GEORGE sheet is not a test sheet! Name: ${textGeorgeSheet.getName()}`);
+        return [];
+      }
+
+      const simulatedDriverIds = [];
+    
+      for (let i = toTextData.length - 1; i >= 3; i--) {
+        const driverId = toTextData[i][0]?.toString().trim();
+        if (driverId) simulatedDriverIds.push(driverId);
+        textGeorgeSheet.deleteRow(i + 1);
+      }
+    
+      logError(`✅ Simulated removing all rows from TEXT GEORGE: ${simulatedDriverIds.join(", ")}`);
+      return simulatedDriverIds;
+  } else {
+      const matchedDriverIds = [];
+
+      for (let i = toTextData.length - 1; i >= 3; i--) {
+        const georgeDriverId = toTextData[i][0]?.toString().trim();
+        const georgeText = toTextData[i][1]?.toString().replace(/\s+/g, ' ').trim();
+
+        for (let j = 3; j < sentTextsData.length; j++) {
+          const sentDriverId = sentTextsData[j][1]?.toString().trim();
+          const sentText = sentTextsData[j][3]?.toString().replace(/\s+/g, ' ').trim();
+
+          if (georgeDriverId === sentDriverId && georgeText === sentText) {
+            textGeorgeSheet.deleteRow(i + 1);
+            matchedDriverIds.push(georgeDriverId);
+            break;
+          }
+        }
+      }
+
+      if (matchedDriverIds.length > 0) {
+        logError(`✅ Removed matched rows from TEXT GEORGE: ${matchedDriverIds.join(", ")}`);
+      } else {
+        logError("⚠️ No matches found to remove");
+      }
+
+      return matchedDriverIds;
+  }
+}
 // called by: findSendTextRow
 // checks for successfully sent texts and removes them from the queue, if its already in sent it wont send
 function markTextedInGeorgeSheet(
@@ -109,7 +165,7 @@ function deleteThisTrigger(name) {
 // assumes that everything in the sheet is OK to send
 // background job that checks if messages in textGeorge have been sent (by comparing to sentTexts).
 function findSendTextRow() {
-    Logger.log("in findSendTextRow")
+    logError("in findSendTextRow")
     const props = PropertiesService.getScriptProperties();
     props.setProperty('startTime', new Date().toISOString());
     // Create a time-based trigger to run every minute
@@ -119,3 +175,21 @@ function findSendTextRow() {
         .create();
 }
 
+
+function processSentTexts(textGeorge = CONFIG.sheets.textGeorge, sentTexts = CONFIG.sheets.sentTexts, pipelineOverride) {
+  logError("in processSentTexts")
+
+  // 1️⃣ Remove *only* matched rows from TEXT GEORGE, get those driver IDs
+  const confirmedDriverIds = markTextedInGeorgeSheetOnce(textGeorge, sentTexts);
+  if (!confirmedDriverIds || confirmedDriverIds.length === 0) {
+    logError("✅ No new sent texts to process");
+    return;
+  }
+
+  // 2️⃣ Update Candidate Pipeline *only* for these newly sent drivers
+  for (const driverId of confirmedDriverIds) {
+    updateOutreachDatesAndPrescreen(driverId, pipelineOverride);
+  }
+
+  logError(`✅ processSentTexts complete. Updated ${confirmedDriverIds.length} driver(s).`);
+}

@@ -2,9 +2,9 @@ function doPost(e) {
   let output = ContentService.createTextOutput("OK"); // capture for end return
   const sheet = CONFIG.sheets.calendly;
   const timestamp = new Date();
+  const data = JSON.parse(e.postData.contents);
 
   try {
-    const data = JSON.parse(e.postData.contents);
     // TEMP: Log the full incoming structure
     Logger.log("Full webhook payload:\n" + JSON.stringify(data, null, 2))
 

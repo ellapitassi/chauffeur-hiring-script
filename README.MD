@@ -106,9 +106,20 @@ appendToCandidatePipelineFromProspects(rows)
 → flushQueueOneAtATime()
    → flushSingleGroup()
    → sendAllTexts()
-   → updateCandidateAfterText()
+   → updateCandidateBeforeText()
    
-
+   NEW
+appendToCandidatePipelineFromProspects
+  ├── Slice Prospects columns P–AA
+  ├── Filter valid rows (with driverId)
+  ├── Append to Candidate Pipeline
+  └── processNewCandidatesFromRows (on those new rows)
+        ├── Classify (Pass / Fail / Blacklist)
+        ├── Choose text and convoName
+        └── queueSingleDriverText
+              ├── Check for duplicates
+              ├── Add to TEXT GEORGE
+              └── updateCandidateBeforeText
 
 1. Paste Uber export into "Prospects" tab (manual)
 2. Script reads and slices columns P–AA (appendToCandidatePipelineFromProspects)
@@ -127,17 +138,22 @@ doGet()
               ├── filter valid rows
               ├── insert into Candidate Pipeline
               └── processNewCandidatesFromRows()
-                    ├── handlePass / handleFail / handleBlacklisted
-                    └── flushQueueOneAtATime()
+                    ├── For each row:
+                    │     └── processSingleCandidateRow()
+                              ├── classifyCandidateRow()           ✅ Decide PASS / FAIL / BLACKLIST
+                              ├── isSafeToQueueText()              ✅ Check for duplicate
+                              ├── queueTextRow()                   ✅ APPEND to TEXT GEORGE
+                              └── updateCandidateBeforeText()       ✅ Mark Candidate Pipeline (Pending/Rejected etc.)
+        └── sendAllTexts()  
+              ├── Triggers external send
+              └── (SENT TEXTS is populated by George externally)
+
+        └── processSentTexts()  
+              ├── Confirms SENT TEXTS against TEXT GEORGE
+              ├── Removes confirmed from TEXT GEORGE
+              └── Updates Candidate Pipeline outreach status
 
 
-                processNewCandidatesFromRows()
-                ├── For each row:
-                │     ├── Get driverId
-                │     ├── Get text from row
-                │     ├── Get convo name from row
-                │     └── Add to deduped queue (by driverId)
-                └── Flush deduped queue to TEXT GEORGE
 
 doPost(e)
   ├── parseCalendlyPayload()

@@ -29,7 +29,11 @@ function test_processNewCandidates_queueingCorrectTexts() {
     FLAGS.ENABLE_TEXTING = false;
     Logger.log("🚫 Texting is DISABLED — running in test mode");
     const { testPipeline, testTextGeorge, testSentTexts } = getTestSheets(1);
-
+    const headers = [
+      "A","B","C","D","E","F","G","H","I","J",
+      "K","L","M","N","O","P","Q","R","S","T",
+      "U","V","W","X","Y","Z","AA"
+    ];
     // add test cases
     const testRows = [
       setRow({ 9: "DRV111", 15: "Pass" }),                   // Should get prescreen text
@@ -259,7 +263,7 @@ function test_processNewCandidate_pass() {
     //   ss.deleteSheet(textGeorge);
       FLAGS.IN_TEST_MODE = false;
     }
-  }
+}
 
 function test_processNewCandidates_batch() {
     FLAGS.IN_TEST_MODE = true;
@@ -367,10 +371,9 @@ if (lastRow > 3) {
       ss.deleteSheet(tempGeorgeSheet);
     FLAGS.IN_TEST_MODE = false;
     }
-  }
+}
 
-
-  function test_processNewCandidates_batch_stepwise() {
+function test_processNewCandidates_batch_stepwise() {
     logError("🧪 Running test_processNewCandidates_batch_stepwise");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -427,4 +430,4 @@ if (lastRow > 3) {
       ss.deleteSheet(tempCandidateSheet);
       ss.deleteSheet(tempGeorgeSheet);
     }
-  }
+}

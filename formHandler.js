@@ -19,6 +19,7 @@ function onFormSubmit(e) {
 }
 
 function handleFormSubmission(e) {
+  logError("!IN handleFormSubmission?")
   // STEP 1: Form row parsing + validation
   const sheet = SpreadsheetApp.openById(CONFIG.sheetIds.formResponses).getSheetByName('Form Responses 1');
   const rowIndex = e.range.getRow();
@@ -28,7 +29,7 @@ function handleFormSubmission(e) {
   const driverId = row[CONFIG.sheetColumns.COLUMN_ID];   // Column K
   const passValue = Number(passValueCell);
 
-  Logger.log(`--- Handling form for driverId: ${driverId} | passValue: ${passValue} ---`);
+  logError(`--- Handling form for driverId: ${driverId} | passValue: ${passValue} ---`);
 
   // failed or invalid Id
   if (passValue !== 1 || !isValidDriverId(driverId)) {
@@ -71,7 +72,7 @@ function handleFormSubmission(e) {
     const textSentSuccess = sendText(driverId);
 
     if (textSentSuccess) {
-      updateCandidateRowSentText(driverId, "PASS")
+      updateCandidateAfterText(driverId, "PASS")
       // runPrescreenFollowUp(); 
     }
   } else {

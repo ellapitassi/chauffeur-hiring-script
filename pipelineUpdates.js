@@ -1,64 +1,5 @@
 // Purpose: Scans new candidates → updates status, adds to queue, and triggers flush.
-function processNewCandidatesFromRows(
-  startRow,
-  rowCount,
-  sheetOverride = null,
-  textSheetOverride = null,
-  sentTextsSheetOverride = null,
-  checkDriverStatsFn = checkDailyDriverStats,
-  testCleanupHook = null
-) {
-  const candidatePipeline = sheetOverride || getSheets().candidatePipeline;
-  const today = Utilities.formatDate(new Date(), "America/Chicago", "MM/dd/yyyy");
-  const rows = candidatePipeline.getRange(startRow, 1, rowCount, candidatePipeline.getLastColumn()).getValues();
-
-  const COL = {
-    STATUS: 1,              // B
-    DRIVER_ID: 9,           // J
-    OVERRIDE: 14,           // O
-    PASS_FAIL: 15,          // P
-    FIRST_OUTREACH: 16,     // Q
-    LATEST_OUTREACH: 17,    // R
-    PRESCREEN_RESULTS: 22,  // W
-    NOTES: 27               // AA
-  };
-
-  const groupedQueue = new Map();
-
-  rows.forEach((row, i) => {
-    const rowIdx = startRow + i;
-    const driverId = row[COL.DRIVER_ID];
-    if (!driverId || driverId.toString().trim() === "") return;
-
-    const passFail = row[COL.PASS_FAIL];
-    const override = row[COL.OVERRIDE];
-    const existingNotes = row[COL.NOTES] || "";
-    const statusNote = checkDriverStatsFn(driverId);
-    const isOverrideFail = String(override || "").toLowerCase().includes("fail");
-
-    if (isBlacklisted(statusNote)) {
-      handleBlacklisted(driverId, rowIdx, existingNotes, groupedQueue, candidatePipeline, COL, today, textSheetOverride, sentTextsSheetOverride);
-    } else if (passFail === "Fail") {
-      handleFail(driverId, rowIdx, groupedQueue, candidatePipeline, COL, today, textSheetOverride, sentTextsSheetOverride);
-    } else if (passFail === "Pass" && isOverrideFail) {
-      handleOverrideFail(driverId, rowIdx, groupedQueue, candidatePipeline, COL, today, textSheetOverride, sentTextsSheetOverride);
-    } else if (passFail === "Pass" && !isOverrideFail) {
-      handlePass(driverId, rowIdx, groupedQueue, candidatePipeline, COL, today, textSheetOverride, sentTextsSheetOverride);
-    }
-  });
-
-  SpreadsheetApp.flush();
-  const textGeorge = textSheetOverride || CONFIG.sheets.textGeorge;
-  flushQueueOneAtATime(
-    groupedQueue,
-    textGeorge,          // ✅ always defined
-    testCleanupHook,
-    COL,
-    today,
-    candidatePipeline
-  );
-  Logger.log(`Finished processing ${rowCount} candidate(s) from row ${startRow}`);
-}
+//processNewCandidatesFromRows_OLD
 
 function isGeorgeQueueEmpty(textSheetOverride = null) {
   const sheet = textSheetOverride || CONFIG.sheets.textGeorge;
@@ -79,7 +20,7 @@ function writeToTextGeorge(driverIds, message, convoName, textSheetOverride = nu
 }
 
 function testProcessNewCandidates() {
-  console.log("3. testing testProcessNewCandidates")
+  logError(`IN testProcessNewCandidate`);
   const startRow = 1312;
   const rowCount = 3;
 
@@ -148,37 +89,3 @@ function runPrescreenFollowUp(sheet = null) {
   Logger.log("✅ Prescreen follow-up run complete.");
 }
 
-
-function handleBlacklisted(driverId, rowIdx, existingNotes, queue, sheet, COL, today, textSheet, sentSheet) {
-  sheet.getRange(rowIdx, COL.STATUS + 1).setValue("Rejected");
-  sheet.getRange(rowIdx, COL.NOTES + 1).setValue("BLACKLISTED. " + existingNotes);
-  setOutreachDates(sheet, rowIdx, COL.FIRST_OUTREACH, COL.LATEST_OUTREACH, today);
-  if (isSafeToQueueText(driverId, CONFIG.texts.blacklistReject, CONFIG.convoNames.blacklist_reject, textSheet, sentSheet)) {
-    addToGroupedQueue(queue, driverId, CONFIG.texts.blacklistReject, CONFIG.convoNames.blacklist_reject, rowIdx);
-  }
-}
-
-function handleFail(driverId, rowIdx, queue, sheet, COL, today, textSheet, sentSheet) {
-  sheet.getRange(rowIdx, COL.STATUS + 1).setValue("Rejected");
-  setOutreachDates(sheet, rowIdx, COL.FIRST_OUTREACH, COL.LATEST_OUTREACH, today);
-  if (isSafeToQueueText(driverId, CONFIG.texts.baseCriteriaRejectText, CONFIG.convoNames.initial_criteria_reject, textSheet, sentSheet)) {
-    addToGroupedQueue(queue, driverId, CONFIG.texts.baseCriteriaRejectText, CONFIG.convoNames.initial_criteria_reject, rowIdx);
-  }
-}
-
-function handleOverrideFail(driverId, rowIdx, queue, sheet, COL, today, textSheet, sentSheet) {
-  sheet.getRange(rowIdx, COL.STATUS + 1).setValue("Rejected");
-  setOutreachDates(sheet, rowIdx, COL.FIRST_OUTREACH, COL.LATEST_OUTREACH, today);
-  if (isSafeToQueueText(driverId, CONFIG.texts.baseCriteriaRejectText, CONFIG.convoNames.initial_criteria_reject, textSheet, sentSheet)) {
-    addToGroupedQueue(queue, driverId, CONFIG.texts.baseCriteriaRejectText, CONFIG.convoNames.initial_criteria_reject, rowIdx);
-  }
-}
-
-function handlePass(driverId, rowIdx, queue, sheet, COL, today, textSheet, sentSheet) {
-  sheet.getRange(rowIdx, COL.STATUS + 1).setValue("Pending");
-  setOutreachDates(sheet, rowIdx, COL.FIRST_OUTREACH, COL.LATEST_OUTREACH, today);
-  sheet.getRange(rowIdx, COL.PRESCREEN_RESULTS + 1).setValue("Pending");
-  if (isSafeToQueueText(driverId, CONFIG.texts.prescreenFormTextToSend, CONFIG.convoNames.prescreenFormText, textSheet, sentSheet)) {
-    addToGroupedQueue(queue, driverId, CONFIG.texts.prescreenFormTextToSend, CONFIG.convoNames.prescreenFormText, rowIdx);
-  }
-}

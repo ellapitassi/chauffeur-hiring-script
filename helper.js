@@ -14,7 +14,8 @@ function checkDailyDriverStats(driverId) {
     return ''; // No special status
   }
   
-  function sendRejectionText(driverId, rejection_convo_name, rejection_text) {
+function sendRejectionText(driverId, rejection_convo_name, rejection_text) {
+    logError("!IN sendRejectionText")
     Logger.log(`Attempting to send rejection text for ${driverId}`);
     const massTextTab = CONFIG.sheets.textGeorge;
     const existingRows = massTextTab.getRange("A4:C").getValues();
@@ -54,7 +55,7 @@ function checkDailyDriverStats(driverId) {
     const sent = sendText(driverId);
     if (sent) {
       logError(driverId, `Rejection text sent`)
-      updateCandidateRowSentText(driverId, "REJECT")
+      updateCandidateAfterText(driverId, "REJECT")
       return true;
     } else {
       logError(driverId, `Failed to send rejection text`)
@@ -125,8 +126,6 @@ function checkDailyDriverStats(driverId) {
       return existingId === driverId && existingBase === baseConvo;
     });
   }
-
-
 
   function getFormattedESTTimestamp() {
     const now = new Date();

@@ -33,122 +33,110 @@ function test_isSafeToQueueText() {
     Logger.log("✅ test_isSafeToQueueText passed");
 }
 
-function test_addToGroupedQueue() {
-  Logger.log("🧪 Running test_addToGroupedQueue");
-
-  const testQueue = new Map();
-  addToGroupedQueue(testQueue, "123", "Hello!", "Intro_form", 4);
-  addToGroupedQueue(testQueue, "456", "Hello!", "Intro_form", 5);
-  addToGroupedQueue(testQueue, "789", "Different message", "Reject_form", 6);
-
-  const introKey = "Hello!|||Intro_form";
-  const rejectKey = "Different message|||Reject_form";
-
-  expectEqual(testQueue.size, 2, "Should group into 2 buckets");
-
-  const introGroup = testQueue.get(introKey);
-  const rejectGroup = testQueue.get(rejectKey);
-
-  // Intro group assertions
-  expectEqual(introGroup.length, 2, "Intro_form group should contain 2 entries");
-  expectEqual(introGroup[0].driverId, "123", "First driver ID in intro group is correct");
-  expectEqual(introGroup[0].rowIdx, 4, "First driver rowIdx in intro group is correct");
-  expectEqual(introGroup[1].driverId, "456", "Second driver ID in intro group is correct");
-  expectEqual(introGroup[1].rowIdx, 5, "Second driver rowIdx in intro group is correct");
-
-  // Reject group assertions
-  expectEqual(rejectGroup.length, 1, "Reject_form group should contain 1 entry");
-  expectEqual(rejectGroup[0].driverId, "789", "Driver ID in reject group is correct");
-  expectEqual(rejectGroup[0].rowIdx, 6, "RowIdx in reject group is correct");
-
-  Logger.log("✅ test_addToGroupedQueue passed");
-}
-
-// function test_flushGroupedQueue() {
-//   Logger.log("🧪 Running test_flushGroupedQueue");
-//   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
-//   const tempSheet = ss.insertSheet("TempFlushTest");
-
-//   tempSheet.clear(); // Start fresh
-
-//   // Insert 3 dummy header rows (TEXT GEORGE starts at row 4)
-//   tempSheet.getRange(1, 1, 3, 3).setValues([
-//     ["", "", ""],
-//     ["", "", ""],
-//     ["Header1", "Header2", "Header3"]
-//   ]);
-
-//   try {
-//     const testQueue = new Map();
-//     addToGroupedQueue(testQueue, "123", "hi", "Prescreen");
-//     addToGroupedQueue(testQueue, "456", "hi", "Prescreen");
-//     addToGroupedQueue(testQueue, "789", "yo", "Welcome");
-
-//     flushGroupedQueue(testQueue, tempSheet);
-
-//     const lastRow = tempSheet.getLastRow();
-//     const data = lastRow > 3
-//       ? tempSheet.getRange(4, 1, lastRow - 3, 3).getValues()
-//       : [];
-
-//     expectEqual(data.length, 3, "Should write 3 rows total");
-//     expectEqual(String(data[0][0]), "123", "First driver should be 123");
-//     expectEqual(data[0][1], "hi", "First row should have text");
-//     expectEqual(data[0][2], "Prescreen", "First row should have convo name");
-//     expectEqual(String(data[1][0]), "456", "Second driver should be 456");
-//     expectEqual(data[1][1], "", "Second row should not repeat text");
-//     expectEqual(data[1][2], "", "Second row should not repeat convo");
-//     expectEqual(String(data[2][0]), "789", "Third driver should be 789");
-//     expectEqual(testQueue.size, 0, "Queue should be cleared");
-//   } finally {
-//     ss.deleteSheet(tempSheet);
-//   }
-
-//   Logger.log("✅ test_flushGroupedQueue passed");
-// }
-
-
-function test_flushSingleGroup() {
-  logError("🧪 Running test_flushSingleGroup");
-
+function test_queueSingleDriverText() {
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
-  const tempSheet = ss.insertSheet("TempFlushSingle");
+  const today = Utilities.formatDate(new Date(), "America/Chicago", "MM/dd/yyyy");
 
-  try {
-    // Add dummy headers to simulate TEXT GEORGE
-    tempSheet.clear();
-    tempSheet.getRange(1, 1, 3, 3).setValues([
-      ["", "", ""],
-      ["", "", ""],
-      ["Drivers", "Text", "Convo"]
-    ]);
+  Logger.log("✅ Setting up test sheets...");
 
-    // Setup queueMap with plain driverId strings
-    const queueMap = new Map();
-    queueMap.set("hi|||Prescreen", [
-      { driverId: "E123", rowIdx: 4 },
-      { driverId: "P456", rowIdx: 5 }
-    ]);
-    const result = flushSingleGroup(queueMap, tempSheet);
+  // ✅ Setup TEXT GEORGE TEST sheet
+  const tempTextGeorge = ss.getSheetByName("TextGeorgeTest") || ss.insertSheet("TextGeorgeTest");
+  tempTextGeorge.clear();
+  tempTextGeorge.appendRow([
+    "DRIVERS TO BE TEXTED", // A (1)
+    "TEXT",                  // B (2)
+    "CONVERSATION NAME"      // C (3)
+  ]);
 
-    const lastRow = tempSheet.getLastRow();
-    const data = lastRow > 3
-      ? tempSheet.getRange(4, 1, lastRow - 3, 3).getValues()
-      : [];
+  // ✅ Setup SENT TEXTS TEST sheet
+  const tempSentTexts = ss.getSheetByName("SentTextsTest") || ss.insertSheet("SentTextsTest");
+  tempSentTexts.clear();
+  tempSentTexts.appendRow([
+    "DATE TIME",  // A (1)
+    "DRIVER ID",  // B (2)
+    "convo_name", // C (3)
+    "text"        // D (4)
+  ]);
 
-    expectEqual(data.length, 2, "Should write 2 rows to TEXT GEORGE");
-    expectEqual(data[0][0], "E123", "First row: correct driverId");
-    expectEqual(data[0][1], "hi", "First row: correct text");
-    expectEqual(data[0][2], "Prescreen", "First row: correct convo name");
-    expectEqual(data[1][0], "P456", "Second row: correct driverId");
-    expectEqual(data[1][1], "", "Second row: text should be blank");
-    expectEqual(data[1][2], "", "Second row: convo should be blank");
-    expectEqual(result.entries.length, 2, "Result includes 2 flushed entries");
-    expectEqual(queueMap.size, 0, "QueueMap should be cleared after flush");
+  // ✅ Setup CANDIDATE PIPELINE TEST sheet
+  const pipelineSheet = ss.getSheetByName("PipelineTest") || ss.insertSheet("PipelineTest");
+  pipelineSheet.clear();
+  pipelineSheet.appendRow([
+    "A","B","C","D","E","F","G","H","I","J",
+    "K","L","M","N","O","P","Q" // example headers
+  ]);
+  pipelineSheet.appendRow([
+    "","","","","","","","","","123", // driverId in J (index 9)
+    "","","","","","",""
+  ]);
 
-    logError("✅ test_flushSingleGroup passed");
-  } finally {
-    ss.deleteSheet(tempSheet);
-  }
+  const rowIdx = 2; // 1-based row index in pipeline
+  const COL = {
+    DRIVER_ID: 9,
+    FIRST_OUTREACH: 15,
+    LATEST_OUTREACH: 16
+  };
+
+  Logger.log("✅ ---- TEST 1: Queue first time (should succeed) ----");
+
+  const result1 = queueSingleDriverText({
+    driverId: "123",
+    text: "Hello Test Message!",
+    convoName: "Intro_Test_Convo",
+    tempTextGeorge,
+    tempSentTexts,
+    COL,
+    today,
+    rowIdx,
+    candidatePipeline: pipelineSheet
+  });
+
+  Logger.log(`✅ First call result (should be true): ${result1}`);
+
+  // ✅ Check TEXT GEORGE contents
+  const queuedData = tempTextGeorge.getDataRange().getValues();
+  Logger.log(`📋 TEXT GEORGE after first append:\n${JSON.stringify(queuedData)}`);
+
+  Logger.log("✅ ---- Simulating 'sending' the message ----");
+
+  // ✅ Move message to SENT TEXTS to simulate sending
+  tempSentTexts.appendRow([
+    today,                   // A = DATE TIME
+    "123",                   // B = DRIVER ID
+    "Intro_Test_Convo",      // C = convo_name
+    "Hello Test Message!"    // D = text
+  ]);
+
+  // ✅ Clear TEXT GEORGE (like production would after sending)
+  tempTextGeorge.clear();
+  tempTextGeorge.appendRow([
+    "DRIVERS TO BE TEXTED",
+    "TEXT",
+    "CONVERSATION NAME"
+  ]);
+
+  Logger.log("✅ ---- TEST 2: Attempt duplicate queue (should be blocked) ----");
+
+  const result2 = queueSingleDriverText({
+    driverId: "123",
+    text: "Hello Test Message!",
+    convoName: "Intro_Test_Convo",
+    tempTextGeorge,
+    tempSentTexts,
+    COL,
+    today,
+    rowIdx,
+    candidatePipeline: pipelineSheet
+  });
+
+  Logger.log(`✅ Second call result (should be false): ${result2}`);
+
+  // ✅ Final contents for inspection
+  const finalQueuedData = tempTextGeorge.getDataRange().getValues();
+  const finalSentData = tempSentTexts.getDataRange().getValues();
+
+  Logger.log(`📋 FINAL TEXT GEORGE:\n${JSON.stringify(finalQueuedData)}`);
+  Logger.log(`📋 FINAL SENT TEXTS:\n${JSON.stringify(finalSentData)}`);
+
+  Logger.log("✅ Test complete!");
 }
-

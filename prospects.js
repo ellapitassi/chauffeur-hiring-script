@@ -64,10 +64,23 @@ function handleNewProspects() {
 
     try {
         // Step 6: Copy selected columns (P–AA) to Candidate Pipeline
+        // takes enriched Prospects rows and inserts them as structured rows into Candidate Pipeline, ready for tracking.
         appendToCandidatePipelineFromProspects(completeRows);
+
+        // Step 7: Send all queued texts
+        sendAllTexts();
+        Utilities.sleep(10000);  // wait 10 seconds (adjust if needed)
+
+        // Step 8: Post-send cleanup
+        processSentTexts();
+        if (!FLAGS.ENABLE_TEXTING) {
+          logError("didnt process SENT TEXTS since FLAGS.ENABLE_TEXTING = false")
+        }
         
-        // Step 7: Delete the processed rows from PROSPECTS
+        // Step 9: Delete the processed rows from PROSPECTS
+        logError(`deleting..., ${rowsToCheck}` )
         deleteProspectsRows(rowsToCheck);
+        logError("DONE RUNNING handleNewProspects")
       } catch (e) {
         logDetailedError({
             message: "Unhandled error in handleNewProspects",
@@ -137,48 +150,100 @@ function waitForDriverIDs(prospectsSheet, rowsToCheck, timeoutMs = 3 * 60 * 1000
   }
 
 // Purpose: Copies valid P–AA data from Prospects → Candidate Pipeline, then calls processNewCandidatesFromRows.
-function appendToCandidatePipelineFromProspects(rows) {
-    const { candidatePipeline } = getSheets();
+function appendToCandidatePipelineFromProspects(rows, candidatePipelineOverride = null) {
+  const candidatePipeline = candidatePipelineOverride || getSheets().candidatePipeline;
 
-    // Adjust indices as needed: get columns P–AA from the prospects data
-    const startCol = 16; // Column P
-    const endCol = 27;   // Column AA
-    const slicedRows = rows.map(row => row.slice(startCol - 1, endCol + 1)); // inclusive of P to AA
+  // 1️⃣ Slice P–AA columns from PROSPECTS
+  const startCol = 16;
+  const endCol = 27;
+  const slicedRows = rows.map(row => row.slice(startCol - 1, endCol + 1));
 
-    const validRows = [];
-    let skippedCount = 0;  
+  // 2️⃣ Validate: must have driverId in Column X (index 8)
+  const validRows = [];
+  let skippedCount = 0;
 
-    // Filter out rows with missing driverId (column J in slice from P-AA = index 8)
-    slicedRows.forEach((row, i) => {
-      const driverId = row[8]; // Column X = index 8 in slice
-      if (driverId && driverId.toString().trim() !== "") {
-        validRows.push(row);
-      } else {
-        skippedCount++;
-        logError(`ERROR: Skipping row ${i + 1} from Prospects — missing driverId in column X`);
-      }
-    });
-
-    if (validRows.length === 0) {
-      logError("ERROR: No valid rows to append — all rows missing driverId.");
-      return;
+  slicedRows.forEach((row, i) => {
+    const driverId = row[8];
+    if (driverId && driverId.toString().trim() !== "") {
+      validRows.push(row);
+    } else {
+      skippedCount++;
+      logError(`⏭️ Skipped row ${i + 1} — missing driverId in Prospects col X`);
     }
+  });
 
-    // Find first empty row in candidate pipeline (looking in column B)
-    const colBValues = candidatePipeline.getRange(2, 2, candidatePipeline.getLastRow() - 1).getValues();
-    let pipelineStartRow = colBValues.findIndex(row => !row[0] || row[0].toString().trim() === "");
-    pipelineStartRow = pipelineStartRow === -1 ? candidatePipeline.getLastRow() + 1 : pipelineStartRow + 2;
+  if (validRows.length === 0) {
+    logError(`❌ No valid rows to append — all rows missing driverId.`);
+    return;
+  }
 
-    // Write valid rows into Candidate Pipeline (B–M)
-    candidatePipeline.getRange(pipelineStartRow, 2, validRows.length, validRows[0].length).setValues(validRows);
-    logError(`Appended ${validRows.length} valid row(s) to Candidate Pipeline from PROSPECTS.`);
-    if (skippedCount > 0) logError(`⏭ Skipped ${skippedCount} row(s) due to missing driverId.`);
+  // 3️⃣A Remove duplicates within this Prospects batch itself
+  const seenInBatch = new Set();
+  const dedupedRows = validRows.filter(row => {
+    const driverId = row[8]?.toString().trim();
+    if (seenInBatch.has(driverId)) {
+      logError(`⚠️ Duplicate driverId in Prospects import: ${driverId}. Skipping.`);
+      return false;
+    }
+    seenInBatch.add(driverId);
+    return true;
+  });
 
-    // Run processing logic on new rows
-    processNewCandidatesFromRows(pipelineStartRow, validRows.length);
+  if (dedupedRows.length === 0) {
+    logError(`❌ All rows in Prospects were duplicates of each other.`);
+    return;
+  }
+
+  // 3️⃣B Remove rows already in Candidate Pipeline
+  const existingCount = candidatePipeline.getLastRow() - 3;
+  let existingIds = [];
+  if (existingCount > 0) {
+    existingIds = candidatePipeline
+      .getRange(4, 10, existingCount)
+      .getValues()
+      .flat()
+      .map(id => id?.toString().trim());
+  }
+
+  const trulyUniqueRows = dedupedRows.filter(row => {
+    const driverId = row[8]?.toString().trim();
+    return !existingIds.includes(driverId);
+  });
+
+  if (trulyUniqueRows.length === 0) {
+    logError(`✅ All Prospects rows already exist in Candidate Pipeline. Nothing new to add.`);
+    return;
+  }
+
+  // 4️⃣ Find next empty row to append
+  // Check STATUS (B) and Sally ID (D) from row 4 down
+  const lastRow = candidatePipeline.getLastRow();
+  const range = candidatePipeline.getRange(4, 2, lastRow - 3, 3); // Columns B–D
+  const values = range.getValues();
+
+  // Find first row where both B and D are empty
+  let firstEmptyIndex = values.findIndex(r => 
+    (!r[0] || r[0].toString().trim() === "") && 
+    (!r[2] || r[2].toString().trim() === "")
+  );
+
+  const pipelineStartRow = firstEmptyIndex !== -1
+    ? firstEmptyIndex + 4
+    : lastRow + 1;
+
+  // 5️⃣ Write only unique new rows
+  candidatePipeline.getRange(pipelineStartRow, 2, trulyUniqueRows.length, trulyUniqueRows[0].length)
+    .setValues(trulyUniqueRows);
+
+  logError(`✅ Appended ${trulyUniqueRows.length} new row(s) to Candidate Pipeline from PROSPECTS.`);
+  if (skippedCount > 0) logError(`⏭️ Skipped ${skippedCount} row(s) due to missing driverId.`);
+
+  // 6️⃣ Process only these new rows
+  processNewCandidatesFromRows(pipelineStartRow, trulyUniqueRows.length);
 }
 
 function deleteProspectsRows(rowsToCheck) {
+  logError("in deleteProspectsRows")
     const { prospects } = getSheets()
   
     // Delete bottom-to-top
@@ -189,19 +254,6 @@ function deleteProspectsRows(rowsToCheck) {
     Logger.log(`🗑️ Deleted ${rowsToCheck.length} rows from PROSPECTS.`);
 }
 
-function testHandleNewProspects() {
-    Logger.log("=== Running testHandleNewProspects ===");
-
-    try {
-        handleNewProspects(); // Call your real function
-        Logger.log("✅ testHandleNewProspects ran without crashing.");
-    } catch (e) {
-        Logger.log("❌ testHandleNewProspects failed: " + e.message);
-    }
-
-    Logger.log("=== Done ===");
-}
-
 function doGet() {
     try {
       const output = handleNewProspects();
@@ -209,21 +261,4 @@ function doGet() {
     } catch (e) {
       return ContentService.createTextOutput("❌ Error: " + e.message);
     }
-  }
-
-  function testAppendToCandidatePipelineFromProspects() {
-    const { candidatePipeline } = getSheets();
-  
-    // Fake data representing one row from PROSPECTS, columns A to AA (1–27)
-    const fakeProspectsRow = [
-      "UUID-1234", "2025-06-18T02:29:28.358Z", "Ella", "Pitassi", "ella@example.com", "1234567890",
-      4.88, 270, "11 years", "UBER_PRO_STATUS_BLUE", false, false,
-      "", "", "", "PENDING", "", "2025-06-18T02:29:28.358Z", "Ella", "Pitassi", "ella@example.com",
-      "1234567890", "", "", 4.88, 270, 11
-    ];
-  
-    const testRows = [fakeProspectsRow];
-  
-    // Run the real function
-    appendToCandidatePipelineFromProspects(testRows);
-  }
+}

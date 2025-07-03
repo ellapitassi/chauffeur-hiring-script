@@ -1,6 +1,8 @@
-const today = Utilities.formatDate(new Date(), "America/Chicago", "yyyyMMdd");
+// const today = Utilities.formatDate(new Date(), "America/Chicago", "MM/dd/yyyy");
+const todayForConvoName = Utilities.formatDate(new Date(), "America/Chicago", "yyyyMMdd");
+
 const FLAGS = {
-    ENABLE_TEXTING: false,
+    ENABLE_TEXTING: true,
     ENABLE_CALENDLY_INTEGRATION: true,
     IN_TEST_MODE: false
     // Add more as needed
@@ -41,14 +43,14 @@ If you’re no longer interested, just let us know. Otherwise, we’re looking f
 Thank you for your interest in the Chauffeur team. At this time, your profile does not meet the initial requirements for our Chauffeur program. If you’d like to explore other vehicle options, reply YES to learn more.`
   },
   convoNames: {
-    interviewText: `Chauffeur_interview_${today}`,
-    prescreenFormText: `Chauffeur_form_${today}`,
-    prescreenSecondOutreach: `Chauffeur_form2_${today}`,
-    prescreenThirdOutreach: `Chauffeur_form3_${today}`,
-    initial_criteria_reject: `Chauffeur_base_reject_${today}`,
-    prescreen_reject:  `Chauffeur_prescreen_reject_${today}`,
-    blacklist_reject: `Chauffeur_blacklist_reject_${today}`,
-    interview_followup_1:  `Chauffeur_interview2_${today}`
+    interviewText: `Chauffeur_interview_${todayForConvoName}`,
+    prescreenFormText: `Chauffeur_form_${todayForConvoName}`,
+    prescreenSecondOutreach: `Chauffeur_form2_${todayForConvoName}`,
+    prescreenThirdOutreach: `Chauffeur_form3_${todayForConvoName}`,
+    initial_criteria_reject: `Chauffeur_base_reject_${todayForConvoName}`,
+    prescreen_reject:  `Chauffeur_prescreen_reject_${todayForConvoName}`,
+    blacklist_reject: `Chauffeur_blacklist_reject_${todayForConvoName}`,
+    interview_followup_1:  `Chauffeur_interview2_${todayForConvoName}`
   },
   sheetIds: {
     formResponses: '1Y_STyBMkrjny5XXUIfKx7T8BibTMvJJGyF5BeBMujmA',
