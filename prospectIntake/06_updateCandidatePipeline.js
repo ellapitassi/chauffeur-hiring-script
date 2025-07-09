@@ -47,7 +47,7 @@ function updateOutreachDatesAndPrescreen(driverId, pipelineOverride = null) {
       throw new Error(`❌ Interview Status (X) should be blank before updating outreach dates!`);
     }
   
-    // ✅ Always update both Outreach Dates - to today
+    // Always update both Outreach Dates - to today
     const today = makeSafeSheetDate(new Date());
     candidatePipeline.getRange(targetRow, 17).setValue(today); // Col Q - First Outreach
     candidatePipeline.getRange(targetRow, 18).setValue(today); // Col R - Latest Outreach
@@ -62,7 +62,7 @@ function updateOutreachDatesAndPrescreen(driverId, pipelineOverride = null) {
     } else {
       // ✅ Set Prescreen Result to Pending
       candidatePipeline.getRange(targetRow, 23).setValue("Pending"); // Col W
-      Logger.log(`✅ Updated outreach dates, Prescreen Result, and Has License for Driver ID ${driverId}`);
+      Logger.log(`Updated outreach dates, Prescreen Result, and Has License for Driver ID ${driverId}`);
     }
     return true;
 }

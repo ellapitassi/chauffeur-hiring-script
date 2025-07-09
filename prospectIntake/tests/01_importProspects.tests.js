@@ -1,5 +1,5 @@
 // function test_handleNewProspects_largeBatch() {
-//     Logger.log("✅ Running test_handleNewProspects_largeBatch");
+//     Logger.log("Running test_handleNewProspects_largeBatch");
   
 //     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
 //     const tempProspects = ss.insertSheet("Temp_Prospects_LargeBatch");
@@ -41,17 +41,17 @@
   
 //       // 4️⃣ Check Candidate Pipeline has new rows
 //       const pipelineData = tempPipeline.getRange(4, 10, tempPipeline.getLastRow() - 3).getValues().flat().filter(Boolean);
-//       expectTrue(pipelineData.length >= 45, "✅ Candidate Pipeline has new driver IDs");
+//       expectTrue(pipelineData.length >= 45, "Candidate Pipeline has new driver IDs");
   
 //       // 5️⃣ Check PROSPECTS is cleared
 //       const prospectsRows = tempProspects.getLastRow() - 3;
-//       expectEqual(prospectsRows, 0, "✅ PROSPECTS sheet cleared");
+//       expectEqual(prospectsRows, 0, "PROSPECTS sheet cleared");
   
 //       // 6️⃣ Check TEXT GEORGE queue
 //       const textGeorgeCount = tempTextGeorge.getLastRow() - 3;
-//       expectTrue(textGeorgeCount >= 45, "✅ TEXT GEORGE queued messages for drivers");
+//       expectTrue(textGeorgeCount >= 45, "TEXT GEORGE queued messages for drivers");
   
-//       Logger.log("✅ test_handleNewProspects_largeBatch PASSED!");
+//       Logger.log("test_handleNewProspects_largeBatch PASSED!");
   
 //     } finally {
 //       ss.deleteSheet(tempProspects);

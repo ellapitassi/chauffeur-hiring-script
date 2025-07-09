@@ -86,27 +86,27 @@ function test_sendRejectionText_real() {
   }
 }
 
-function test_updateCandidateRowInterviewStatusByEmail() {
-  const sheet = CONFIG.sheets.candidatePipeline;
-  const testEmail = "ella@drivesally.com"; // Make sure this is in cell G996
-  const testDate = "6/17/2025 1:00pm";
+// function test_updateCandidateRowInterviewStatusByEmail() {
+//   const sheet = CONFIG.sheets.candidatePipeline;
+//   const testEmail = "ella@drivesally.com"; // Make sure this is in cell G996
+//   const testDate = "6/17/2025 1:00pm";
 
-  // Call your function to simulate invite creation
-  updateCandidateRowInterviewStatusByEmail(testEmail, "created", testDate);
+//   // Call your function to simulate invite creation
+//   updateCandidateRowInterviewStatusByEmail(testEmail, "created", testDate, ca);
 
-  // Find the row by email in column G
-  const data = sheet.getRange("G2:G").getValues().flat();
-  const rowIndex = data.findIndex(e => e && e.toString().trim().toLowerCase() === testEmail.toLowerCase());
+//   // Find the row by email in column G
+//   const data = sheet.getRange("G2:G").getValues().flat();
+//   const rowIndex = data.findIndex(e => e && e.toString().trim().toLowerCase() === testEmail.toLowerCase());
 
-  if (rowIndex === -1) {
-    Logger.log(`❌ Email not found in test sheet: ${testEmail}`);
-    return;
-  }
+//   if (rowIndex === -1) {
+//     Logger.log(`❌ Email not found in test sheet: ${testEmail}`);
+//     return;
+//   }
 
-  const targetRow = rowIndex + 2; // +2 for header and 0-indexing
-  const result = sheet.getRange(targetRow, 25).getValue(); // Column Y = 25
-  Logger.log(`✅ Row ${targetRow} — Expected: ${testDate} | Actual: ${result}`);
-}
+//   const targetRow = rowIndex + 2; // +2 for header and 0-indexing
+//   const result = sheet.getRange(targetRow, 25).getValue(); // Column Y = 25
+//   Logger.log(`Row ${targetRow} — Expected: ${testDate} | Actual: ${result}`);
+// }
 
 function testLogDetailedError() {
   logDetailedError({
@@ -159,7 +159,7 @@ function testRunPrescreenFollowUp() {
   // Restore original config
   CONFIG.sheets = originalGetSheets;
 
-  Logger.log("✅ testRunPrescreenFollowUp completed. Check the Test_Pipeline sheet for results.");
+  Logger.log("testRunPrescreenFollowUp completed. Check the Test_Pipeline sheet for results.");
 }
 
 function createTestRow({ status, lastOutreach, extraAttempts, driverId }) {

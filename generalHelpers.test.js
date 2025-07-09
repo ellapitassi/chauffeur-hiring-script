@@ -7,14 +7,5 @@ function test_getBaseConvo() {
     expectEqual(getBaseConvo(""), "", "Should return empty string for empty input");
     expectEqual(getBaseConvo(null), undefined, "Should return undefined for null input");
   
-    Logger.log("✅ test_getBaseConvo passed");
-  }
-  
-//   function expectEqual(actual, expected, message) {
-//     if (actual !== expected) {
-//       Logger.log(`❌ Test failed: ${message}. Got '${actual}', expected '${expected}'`);
-//       throw new Error(`❌ Test failed: ${message}`);
-//     } else {
-//       Logger.log(`✅ ${message}`);
-//     }
-//   }
+    Logger.log("test_getBaseConvo passed");
+}

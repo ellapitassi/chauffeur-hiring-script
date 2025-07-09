@@ -30,7 +30,7 @@ function test_isSafeToQueueText() {
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
   
-    Logger.log("✅ test_isSafeToQueueText passed");
+    Logger.log("test_isSafeToQueueText passed");
 }
 
 function test_queueSingleDriverText() {

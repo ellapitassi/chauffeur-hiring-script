@@ -257,10 +257,10 @@ function test_processNewCandidate_pass() {
   
       expectTrue(wasQueued, "TextGeorge should have correct row queued");
   
-      Logger.log("✅ test_processNewCandidate_pass passed");
+      Logger.log("test_processNewCandidate_pass passed");
     } finally {
-    //   ss.deleteSheet(candidateSheet);
-    //   ss.deleteSheet(textGeorge);
+      ss.deleteSheet(candidateSheet);
+      ss.deleteSheet(textGeorge);
       FLAGS.IN_TEST_MODE = false;
     }
 }

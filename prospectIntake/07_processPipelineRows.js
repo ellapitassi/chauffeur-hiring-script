@@ -8,7 +8,6 @@ function processSingleCandidateRow({
     today,
     checkDriverStatsFn
 }) {
-    console.log("processSingleCandidateRow")
     const driverId = row[COL.DRIVER_ID];
     if (!driverId) return;
 
@@ -49,7 +48,6 @@ function processNewCandidatesFromRows(
     sentTextsSheetOverride = null,
     checkDriverStatsFn = checkDailyDriverStats
 ) {
-    console.log("processNewCandidatesFromRows")
     const candidatePipeline = sheetOverride || CONFIG.sheets.candidatePipeline;
     const textGeorgeSheet = textSheetOverride || CONFIG.sheets.textGeorge;
     const sentTextsSheet = sentTextsSheetOverride || CONFIG.sheets.sentTexts;

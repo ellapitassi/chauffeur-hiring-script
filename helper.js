@@ -27,10 +27,10 @@ function checkIfDriverIdExistsInCandidatePipeline(driverId) {
 function getSentTextRows(sentTextsSheetOverride = null) {
   const sheet = sentTextsSheetOverride || CONFIG.sheets.sentTexts;
   const lastRow = sheet.getLastRow();
-  Logger.log(`🧪 sentTexts lastRow: ${lastRow}`);
+  Logger.log(`sentTexts lastRow: ${lastRow}`);
   if (lastRow > 3) {
     const values = sheet.getRange(4, 1, lastRow - 3, 4).getValues();
-    Logger.log(`🧪 sentTexts first row: ${JSON.stringify(values[0])}`);
+    Logger.log(`sentTexts first row: ${JSON.stringify(values[0])}`);
     return values;
   }
   return [];

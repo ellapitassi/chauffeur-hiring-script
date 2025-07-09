@@ -1,12 +1,3 @@
-function writeToTextGeorge(driverIds, message, convoName, textSheetOverride = null) {
-  const sheet = textSheetOverride || CONFIG.sheets.textGeorge;
-  const unique = [...new Set(driverIds)];
-  unique.forEach(driverId => {
-    sheet.appendRow([driverId, message, convoName]);
-  });
-  Logger.log(`✍️ Wrote ${unique.length} messages to textGeorge for convo: ${convoName}`);
-}
-
 function testProcessNewCandidates() {
   logError(`IN testProcessNewCandidate`);
   const startRow = 1312;
@@ -21,7 +12,7 @@ function testProcessNewCandidates() {
 }
 
 function testProcessRow1329() {
-  Logger.log("🧪 Manually testing processNewCandidatesFromRows on row 1329");
+  Logger.log("Manually testing processNewCandidatesFromRows on row 1329");
   processNewCandidatesFromRows(1329, 1);
 }
 
@@ -55,25 +46,55 @@ function runPrescreenFollowUp(sheet = null) {
         queueText(driverId, CONFIG.texts.prescreenSecondOutreach, CONFIG.convoNames.prescreenSecondOutreach);
         activeSheet.getRange(rowNum, 18).setValue(todayFormatted);      // Col R
         activeSheet.getRange(rowNum, 39).setValue(1);                   // Col AM
-        Logger.log(`[Row ${rowNum}] 📨 Sent 2nd message (1st follow-up) to ${driverId}`);
+        Logger.log(`[Row ${rowNum}] Sent 2nd message (1st follow-up) to ${driverId}`);
       } else if (extraAttempts === 1) {
         queueText(driverId, CONFIG.texts.prescreenThirdOutreach, CONFIG.convoNames.prescreenThirdOutreach);
         activeSheet.getRange(rowNum, 18).setValue(todayFormatted);      // Col R
         activeSheet.getRange(rowNum, 39).setValue(2);                   // Col AM
         activeSheet.getRange(rowNum, 23).setValue("Abandoned");         // Col W
-        Logger.log(`[Row ${rowNum}] 📨 Sent final message and marked ${driverId} as Abandoned`);
+        Logger.log(`[Row ${rowNum}] Sent final message and marked ${driverId} as Abandoned`);
       } else if (extraAttempts >= 2) {
         Logger.log(`[Row ${rowNum}] 🚫 Skipping ${driverId} — already sent final message (AM = ${extraAttempts})`);
       }
     } else {
       Logger.log(`[Row ${rowNum}] ⛔ Skipping — Reasons:`);
-      if (status !== "Pending") Logger.log(`   ❌ Status is not 'Pending': ${status}`);
-      if (!driverId) Logger.log(`   ❌ Missing driverId`);
-      if (!lastOutreach) Logger.log(`   ❌ Missing lastOutreach`);
-      if (!tooOld) Logger.log(`   ❌ lastOutreach not older than ${daysSinceLastOutreach} days`);
+      if (status !== "Pending") Logger.log(`    Status is not 'Pending': ${status}`);
+      if (!driverId) Logger.log(`   Missing driverId`);
+      if (!lastOutreach) Logger.log(`   Missing lastOutreach`);
+      if (!tooOld) Logger.log(`   lastOutreach not older than ${daysSinceLastOutreach} days`);
     }
   });
 
   Logger.log("Prescreen follow-up run complete.");
+}
+
+function queueText(driverId, message, convoName) {
+  if (!FLAGS.ENABLE_TEXTING) {
+      Logger.log(`🧪 [DISABLED] Would queue text for ${driverId}: "${text}" (${convoName})`);
+      return;
+    }
+  const textGeorgeSheet = CONFIG.sheets.textGeorge;
+
+  if (!driverId || !message) {
+    logDetailedError({
+      message: "Missing driverId or message for queuing text",
+      context: "queueText",
+      details: `driverId: ${driverId}, message: ${message}`
+    });
+    return;
+  }
+  const existingRows = textGeorgeSheet.getRange("A4:A").getValues().flat();
+  if (existingRows.includes(driverId)) {
+      logDetailedError({
+          driverId,
+          message: "Duplicate entry — driverId already exists in TEXT GEORGE",
+          context: "queueText",
+          details: `Skipped queuing for convo: ${convoName}`
+      });
+      return;
+  }
+  
+  textGeorgeSheet.appendRow([driverId, message, convoName]);
+  Logger.log(`📨 Queued text for ${driverId} — ${convoName}`);
 }
 

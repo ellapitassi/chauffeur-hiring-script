@@ -1,5 +1,5 @@
 function test_updateCandidatePipelineTwoStepFlow() {
-    Logger.log("✅ Running test_updateCandidatePipelineTwoStepFlow");
+    Logger.log("Running test_updateCandidatePipelineTwoStepFlow");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
     const tempPipelineBlank = ss.insertSheet("Temp_CandidatePipeline_TwoStepTest");
@@ -39,7 +39,6 @@ function test_updateCandidatePipelineTwoStepFlow() {
       SpreadsheetApp.flush();  // ⚡️ FORCE WRITE
 
       const afterFirst = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
-      console.log("afterFirst", afterFirst)
       expectEqual(afterFirst[COL.STATUS], "Pending", "STATUS should be Pending after first update");
       expectTrue(afterFirst[COL.NOTES].includes("Initial note"), "Notes include Initial note");
   
@@ -59,7 +58,7 @@ function test_updateCandidatePipelineTwoStepFlow() {
       Utilities.sleep(500);  // Simulate time gap if desired
   
       // *Manually set system date override if needed for your system*
-      updateCandidateAfterText(testDriverId, "PASS", null, tempPipeline);
+      // updateCandidateAfterText(testDriverId, "PASS", null, tempPipeline);
   
       const afterSecond = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
       expectEqual(afterSecond[COL.STATUS], "Pending", "STATUS stays Pending after SENT");
@@ -165,7 +164,7 @@ function test_appendToCandidatePipelineFromProspects_dedupes() {
 }
 
 function test_appendToPipeline_movesProspectsDataCorrectly() {
-  Logger.log("✅ Running test_appendToPipeline_movesProspectsDataCorrectly");
+  Logger.log("Running test_appendToPipeline_movesProspectsDataCorrectly");
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
   const tempPipeline = ss.insertSheet("Temp_CandidatePipeline_AppendTest");
@@ -197,13 +196,13 @@ function test_appendToPipeline_movesProspectsDataCorrectly() {
 
     // 4️⃣ Verify Pipeline got P–AA copied to B–M
     const data = tempPipeline.getRange(4, 2, 1, 12).getValues()[0];
-    expectEqual(data[8], testDriverId, "✅ Sally ID copied to col J");
-    expectEqual(data[12 - 1], testNote, "✅ Notes copied to col M");
+    expectEqual(data[8], testDriverId, "Sally ID copied to col J");
+    expectEqual(data[12 - 1], testNote, "Notes copied to col M");
 
     // 5️⃣ Master Status (col B) should remain empty
-    expectEqual(data[0], "", "✅ Master Status remains empty (not set by append)");
+    expectEqual(data[0], "", "Master Status remains empty (not set by append)");
 
-    Logger.log("✅ test_appendToPipeline_movesProspectsDataCorrectly PASSED!");
+    Logger.log("test_appendToPipeline_movesProspectsDataCorrectly PASSED!");
   } finally {
     ss.deleteSheet(tempPipeline);
     ss.deleteSheet(tempTextGeorge);

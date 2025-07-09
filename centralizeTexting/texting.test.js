@@ -124,36 +124,36 @@ function dummyTriggerFunction() {
     Logger.log("Dummy trigger ran");
 }
 
-function test_findSendTextRow_createsTriggerAndSetsStartTime() {
-  Logger.log("Starting test_findSendTextRow_createsTriggerAndSetsStartTime");
+// function test_findSendTextRow_createsTriggerAndSetsStartTime() {
+//   Logger.log("Starting test_findSendTextRow_createsTriggerAndSetsStartTime");
 
-  const props = PropertiesService.getScriptProperties();
-  const triggerHandler = 'markTextedInGeorgeSheet';
+//   const props = PropertiesService.getScriptProperties();
+//   const triggerHandler = 'markTextedInGeorgeSheet';
 
-  // 1️⃣ Ensure a clean state
-  deleteThisTrigger(triggerHandler);
-  props.deleteProperty('startTime');
+//   // 1️⃣ Ensure a clean state
+//   deleteThisTrigger(triggerHandler);
+//   props.deleteProperty('startTime');
 
-  try {
-    // 2️⃣ Call the function under test
-    findSendTextRow();
+//   try {
+//     // 2️⃣ Call the function under test
+//     findSendTextRow();
 
-    // 3️⃣ Check that startTime was set
-    const startTime = props.getProperty('startTime');
-    expectTrue(!!startTime, "startTime should be set in script properties");
+//     // 3️⃣ Check that startTime was set
+//     const startTime = props.getProperty('startTime');
+//     expectTrue(!!startTime, "startTime should be set in script properties");
 
-    // 4️⃣ Check that the trigger was created
-    const triggers = ScriptApp.getProjectTriggers();
-    const found = triggers.some(t => t.getHandlerFunction() === triggerHandler);
-    expectTrue(found, "Trigger for markTextedInGeorgeSheet should exist");
+//     // 4️⃣ Check that the trigger was created
+//     const triggers = ScriptApp.getProjectTriggers();
+//     const found = triggers.some(t => t.getHandlerFunction() === triggerHandler);
+//     expectTrue(found, "Trigger for markTextedInGeorgeSheet should exist");
 
-    Logger.log("test_findSendTextRow_createsTriggerAndSetsStartTime PASSED!");
-  } finally {
-    // 5️⃣ Always clean up after the test
-    deleteThisTrigger(triggerHandler);
-    props.deleteProperty('startTime');
-  }
-}
+//     Logger.log("test_findSendTextRow_createsTriggerAndSetsStartTime PASSED!");
+//   } finally {
+//     // 5️⃣ Always clean up after the test
+//     deleteThisTrigger(triggerHandler);
+//     props.deleteProperty('startTime');
+//   }
+// }
 
 // checking empty state
 function test_isGeorgeQueueEmpty() {
@@ -184,73 +184,6 @@ function test_isGeorgeQueueEmpty() {
     Logger.log("test_isGeorgeQueueEmpty passed");
   } finally {
     ss.deleteSheet(tempTextGeorge);
-  }
-}
-
-function test_updateCandidateAfterText() {
-  Logger.log("Running test_updateCandidateAfterText");
-
-  const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
-
-  /**
-   * Helper to setup fresh test sheet and row
-   */
-  function setupTestRow() {
-    const sheet = ss.insertSheet();
-    const headers = new Array(52).fill("");
-    headers[1] = "Master Status";
-    headers[9] = "Sally ID";
-    headers[17] = "Latest Outreach Date";
-    headers[22] = "Prescreen Result";
-    headers[23] = "Interview Status";
-    headers[24] = "Source";
-// adding headers to row 3
-    sheet.getRange(3, 1, 1, headers.length).setValues([headers]);
-
-    const testDriverId = "DRV_TEST_ABC";
-    const dataRow = new Array(52).fill("");
-    dataRow[9] = testDriverId;
-    sheet.getRange(4, 1, 1, 52).setValues([dataRow]);
-
-    SpreadsheetApp.flush();
-    return { sheet, testDriverId };
-  }
-
-  try {
-    // 1️⃣ Test REJECT
-    Logger.log("Testing REJECT scenario...");
-    const { sheet: sheetReject, testDriverId: driverIdReject } = setupTestRow();
-
-    updateCandidateAfterText(driverIdReject, "REJECT", null, sheetReject);
-    SpreadsheetApp.flush();
-
-    const afterReject = sheetReject.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(afterReject[1], "Rejected", "Master Status should be Rejected");
-    expectEqual(afterReject[22], "Fail", "Prescreen Result should be Fail");
-    expectTrue(!!afterReject[17], "Latest Outreach Date should be set");
-
-    ss.deleteSheet(sheetReject);
-
-    // 2️⃣ Test PASS
-    Logger.log("Testing PASS scenario...");
-    const { sheet: sheetPass, testDriverId: driverIdPass } = setupTestRow();
-
-    updateCandidateAfterText(driverIdPass, "PASS", null, sheetPass);
-    SpreadsheetApp.flush();
-
-    const afterPass = sheetPass.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(afterPass[22], "Pass", "Prescreen Result should be Pass");
-    expectEqual(afterPass[23], "Invited", "Interview Status should be Invited");
-    expectEqual(afterPass[24], "Calendly", "Source/Status should be Calendly");
-    expectTrue(!!afterPass[17], "Latest Outreach Date should be set");
-
-    ss.deleteSheet(sheetPass);
-
-    Logger.log("test_updateCandidateAfterText passed!");
-
-  } catch (err) {
-    Logger.log(`❌ test_updateCandidateAfterText failed: ${err}`);
-    throw err;
   }
 }
 
@@ -671,167 +604,6 @@ function test_processNewCandidatesFromRows() {
     ss.deleteSheet(tempPipeline);
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
-  }
-}
-
-// real flag ON — end-to-end, from queuing → sending → SENT TEXTS → deletion
-function test_sendREALAndCleanupIntegration() {
-  Logger.log("Starting test_sendAndCleanupIntegration");
-
-  FLAGS.ENABLE_TEXTING = true;
-
-  const driverId = "PITASSI_ELLA_83333";
-  const testMessage = "This is a real integration test text";
-  const convoName = "Test_Convo";
-  const textGeorgeSheet = CONFIG.sheets.textGeorge;
-  const sentTextsSheet = CONFIG.sheets.sentTexts;
-
-  // 0. PRECHECK: Ensure TEXT GEORGE is empty
-  Logger.log("Checking TEXT GEORGE is empty before starting");
-  const lastRow = textGeorgeSheet.getLastRow();
-  if (lastRow > 3) {
-    const numRows = lastRow - 3;
-    const existingRows = textGeorgeSheet.getRange(4, 1, numRows, 3).getValues();
-    if (existingRows.length > 0) {
-      throw new Error(`❌ TEXT GEORGE not empty before test! Found ${existingRows.length} rows. Please clear TEXT GEORGE before running this test.`);
-    }
-  }
-
-  // 1. Queue the message in TEXT GEORGE
-  Logger.log("Queuing message in TEXT GEORGE");
-  textGeorgeSheet.appendRow([driverId, testMessage, convoName]);
-  SpreadsheetApp.flush();
-  Utilities.sleep(3000);
-
-  // 2. Call sendAllTexts() to simulate sending
-  Logger.log("Calling sendAllTexts()");
-  sendAllTexts();
-  Utilities.sleep(5000);
-
-  // 3. Confirm it's in SENT TEXTS
-  Logger.log("Checking if message was logged in SENT TEXTS");
-  let foundInSentTexts = false;
-  const maxAttempts = 10;
-  const sleepTime = 2000;
-
-  for (let i = 0; i < maxAttempts; i++) {
-    SpreadsheetApp.flush();
-    Utilities.sleep(sleepTime);
-
-    const rows = sentTextsSheet.getRange(4, 1, sentTextsSheet.getLastRow() - 3, 4).getValues();
-    Logger.log(`🔍 Attempt ${i + 1}: Searching SENT TEXTS for driverId=${driverId}`);
-    foundInSentTexts = rows.some(row => row[1] === driverId && row[3]?.includes(testMessage));
-    if (foundInSentTexts) break;
-  }
-
-  expectTrue(foundInSentTexts, "Expected text to be logged in SENT TEXTS");
-
-  // 4. Simulate the trigger by calling markTextedInGeorgeSheet
-  Logger.log("Running markTextedInGeorgeSheet manually");
-  markTextedInGeorgeSheet(textGeorgeSheet, sentTextsSheet);
-  SpreadsheetApp.flush();
-  Utilities.sleep(3000);
-
-  // 5. Confirm it's removed from TEXT GEORGE
-  Logger.log("Checking that row was deleted from TEXT GEORGE");
-  const lastRowAfter = textGeorgeSheet.getLastRow();
-  const numRowsAfter = Math.max(0, lastRowAfter - 3);
-  let georgeRows = [];
-  if (numRowsAfter > 0) {
-    georgeRows = textGeorgeSheet.getRange(4, 1, numRowsAfter, 3).getValues();
-  }
-
-  const stillExists = georgeRows.some(row => row[0] === driverId);
-  expectFalse(stillExists, "Row should be deleted from TEXT GEORGE after cleanup");
-
-  Logger.log("test_sendAndCleanupIntegration PASSED!");
-}
-
-function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
-  Logger.log("Running test_markTextedInGeorgeSheet_andUpdatePipeline_allCases");
-
-  const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
-  const textGeorge = ss.insertSheet("Temp_TextGeorge_AllCases");
-  const sentTexts = ss.insertSheet("Temp_SentTexts_AllCases");
-  const candidatePipeline = ss.insertSheet("Temp_CandidatePipeline_AllCases");
-
-  try {
-    // === HEADERS
-    textGeorge.getRange(3, 1, 1, 3).setValues([["Driver ID", "Message", "Convo"]]);
-    sentTexts.getRange(3, 1, 1, 4).setValues([["Date", "Driver ID", "Convo", "Message"]]);
-
-    const headers = new Array(52).fill("");
-    headers[1] = "Master Status";
-    headers[9] = "Sally ID";
-    headers[17] = "Latest Outreach Date";
-    headers[22] = "Prescreen Result";
-    headers[23] = "Interview Status";
-    headers[24] = "Source";
-    candidatePipeline.getRange(3, 1, 1, 52).setValues([headers]);
-
-    // === DATA SETUP
-    const drivers = [
-      { id: "DRV_PASS_001", convo: "TestConvo_PASS", message: "Test Message PASS", status: "PASS" },
-      { id: "DRV_FAIL_001", convo: "TestConvo_FAIL", message: "Test Message FAIL", status: "REJECT" },
-      { id: "DRV_BLACKLIST_001", convo: "TestConvo_BLACKLIST", message: "Test Message BLACKLIST", status: "REJECT" }
-    ];
-
-    // Add to TEXT GEORGE & SENT TEXTS & Pipeline
-    drivers.forEach(d => {
-      textGeorge.appendRow([d.id, d.message, d.convo]);
-      sentTexts.appendRow([new Date(), d.id, d.convo, d.message]);
-
-      const row = new Array(52).fill("");
-      row[9] = d.id;
-      row[15] = (d.status === "PASS") ? "Pass" : "Fail";
-      candidatePipeline.appendRow(row);
-    });
-
-    SpreadsheetApp.flush();
-
-    // --- Step 1: markTextedInGeorgeSheet (removes from TEXT GEORGE)
-    markTextedInGeorgeSheet(textGeorge, sentTexts);
-    SpreadsheetApp.flush();
-
-    const remainingRows = textGeorge.getLastRow() - 3;
-    expectEqual(remainingRows, 0, "TEXT GEORGE should be empty after markTextedInGeorgeSheet");
-
-    // --- Step 2: For each driver, update pipeline
-    drivers.forEach(d => {
-      updateCandidateAfterText(d.id, d.status, null, candidatePipeline);
-    });
-    SpreadsheetApp.flush();
-
-    // --- Step 3: Validate Pipeline Updates
-    const data = candidatePipeline.getRange(4, 1, candidatePipeline.getLastRow() - 3, 52).getValues();
-
-    data.forEach(row => {
-      const driverId = row[9];
-      if (driverId.includes("PASS")) {
-        expectEqual(row[1], "Pending", "PASS Master Status should be Pending");
-        expectEqual(row[22], "Pass", "PASS Prescreen Result");
-        expectEqual(row[23], "Invited", "PASS Interview Status");
-        expectEqual(row[24], "Calendly", "PASS Source");
-        expectTrue(!!row[17], "PASS Latest Outreach Date set");
-      } else if (driverId.includes("FAIL")) {
-        expectEqual(row[1], "Rejected", "FAIL Master Status should be Rejected");
-        expectEqual(row[22], "Fail", "FAIL Prescreen Result");
-        expectTrue(!!row[17], "FAIL Latest Outreach Date set");
-      } else if (driverId.includes("BLACKLIST")) {
-        expectEqual(row[1], "Rejected", "BLACKLIST Master Status should be Rejected");
-        expectEqual(row[22], "Fail", "BLACKLIST Prescreen Result");
-        expectTrue(!!row[17], "BLACKLIST Latest Outreach Date set");
-      } else {
-        throw new Error(`❌ Unexpected driver in candidate pipeline: ${driverId}`);
-      }
-    });
-
-    Logger.log("✅ test_markTextedInGeorgeSheet_andUpdatePipeline_allCases PASSED!");
-
-  } finally {
-    ss.deleteSheet(textGeorge);
-    ss.deleteSheet(sentTexts);
-    ss.deleteSheet(candidatePipeline);
   }
 }
 

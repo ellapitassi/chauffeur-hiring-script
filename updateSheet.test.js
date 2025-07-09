@@ -1,10 +1,10 @@
 /**
- * ✅ UNIT TEST
+ * UNIT TEST
  * Tests that updateOutreachDatesAndPrescreen correctly sets Outreach dates and Prescreen Result
  * without touching Interview Status, Source, or Notes.
  */
 function test_updateOutreachDatesPrescreenAndLicense() { 
-    Logger.log("✅ Running test_updateOutreachDatesPrescreenAndLicense");
+    Logger.log("Running test_updateOutreachDatesPrescreenAndLicense");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
     const tempSheet = ss.insertSheet("Temp_Pipeline_Test");
@@ -63,7 +63,7 @@ function test_updateOutreachDatesPrescreenAndLicense() {
       expectEqual(updated[26], "", "Notes (AA) unchanged");
       expectEqual(updated[1], row[1], "Master Status (B) should stay unchanged");
   
-      Logger.log("✅ test_updateOutreachDatesPrescreenAndLicense passed!");
+      Logger.log("test_updateOutreachDatesPrescreenAndLicense passed!");
     } finally {
       ss.deleteSheet(tempSheet);
     }

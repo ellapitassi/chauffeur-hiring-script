@@ -162,7 +162,7 @@ function sendAllTextsWithLock(
       Logger.log('🔐 Attempting to acquire send lock...');
       lock.waitLock(30000);  // Wait up to 30 seconds
   
-      Logger.log('✅ Lock acquired. Starting send process.');
+      Logger.log('Lock acquired. Starting send process.');
   
       // 2️⃣ Perform sending
       sendAllTexts(textGeorgeSheet);
@@ -170,7 +170,7 @@ function sendAllTextsWithLock(
       // 3️⃣ Clean up
       markTextedInGeorgeSheetOnce(textGeorgeSheet, sentTextsSheet)
   
-      Logger.log('✅ Sending and cleanup complete.');
+      Logger.log('Sending and cleanup complete.');
   
     } catch (error) {
       Logger.log('❌ Could not obtain lock. Another process may be running: ' + error);
