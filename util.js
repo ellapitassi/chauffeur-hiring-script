@@ -1,7 +1,3 @@
-function isBlacklisted(statusNote) {
-    return statusNote && statusNote.toLowerCase() === 'blacklisted';
-}
-
 function isValidDriverId(id) {
     return (
         typeof id === 'string' &&
@@ -58,4 +54,20 @@ function logDuplicateTextAttempt(driverId, convoName) {
   const sheet = CONFIG.sheets.errors; 
   const now = Utilities.formatDate(new Date(), "America/Chicago", "yyyy-MM-dd HH:mm");
   sheet.appendRow([now, driverId, convoName, "Duplicate text skipped"]);
+}
+
+function getSheets() {
+  return CONFIG.sheets;
+}
+
+/**
+ * Ensures a date is safe for Google Sheets by setting time to noon.
+ * Prevents timezone drift issues when formatting.
+ * @param {Date} baseDate
+ * @return {Date}
+ */
+function makeSafeSheetDate(baseDate) {
+  const d = new Date(baseDate);
+  d.setHours(12, 0, 0, 0);
+  return d;
 }

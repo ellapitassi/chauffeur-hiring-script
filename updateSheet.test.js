@@ -1,4 +1,9 @@
-function test_updateOutreachDatesPrescreenAndLicense() {
+/**
+ * ✅ UNIT TEST
+ * Tests that updateOutreachDatesAndPrescreen correctly sets Outreach dates and Prescreen Result
+ * without touching Interview Status, Source, or Notes.
+ */
+function test_updateOutreachDatesPrescreenAndLicense() { 
     Logger.log("✅ Running test_updateOutreachDatesPrescreenAndLicense");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -62,10 +67,14 @@ function test_updateOutreachDatesPrescreenAndLicense() {
     } finally {
       ss.deleteSheet(tempSheet);
     }
-  }
+}
 
-
-  function test_helper_get_pipeline_headers(tempPipeline) {
+/**
+ * ⚙️ Helper for tests:
+ * Sets up headers in row 3 of a given pipeline test sheet.
+ * Use in any test that needs standard Candidate Pipeline columns.
+ */
+function test_helper_get_pipeline_headers(tempPipeline) {
     const headers = new Array(52).fill("");
     headers[1] = "Master Status";
     headers[9] = "Sally ID";              // DRIVER_ID (col J)

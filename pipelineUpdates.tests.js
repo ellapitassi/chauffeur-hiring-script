@@ -72,13 +72,13 @@ function test_processNewCandidates_queueingCorrectTexts() {
         }
     });
     
-    Logger.log("✅ All queued texts matched expectations.");
+    Logger.log("All queued texts matched expectations.");
   
     SpreadsheetApp.flush();
 }
 
 function test_sendRealTextToSelfPass() {
-    FLAGS.ENABLE_TEXTING = true; // ✅ Turn ON real texting
+    FLAGS.ENABLE_TEXTING = true; // Turn ON real texting
   
     Logger.log("📲 Sending real text to self — texting is ENABLED");
   
@@ -116,16 +116,16 @@ function test_sendRealTextToSelfPass() {
     // 5. Actually run it
     Logger.log("⚙️ Starting process...");
     processNewCandidatesFromRows(4, testRows.length, testPipeline);
-    Logger.log("✅ processNewCandidatesFromRows finished.");
+    Logger.log("processNewCandidatesFromRows finished.");
 
-    Logger.log("✅ Test complete. Check if you received a real text.");
+    Logger.log("Test complete. Check if you received a real text.");
   
     // 6. Clean up
     SpreadsheetApp.flush();
 }
 
 function test_sendRealTextToSelfFail() {
-    FLAGS.ENABLE_TEXTING = true; // ✅ Turn ON real texting
+    FLAGS.ENABLE_TEXTING = true; // Turn ON real texting
   
     Logger.log("📲 Sending real text to self — texting is ENABLED");
   
@@ -163,9 +163,9 @@ function test_sendRealTextToSelfFail() {
     // 5. Actually run it
     Logger.log("⚙️ Starting process...");
     processNewCandidatesFromRows(4, testRows.length, testPipeline, testTextGeorge);
-    Logger.log("✅ processNewCandidatesFromRows finished.");
+    Logger.log("processNewCandidatesFromRows finished.");
 
-    Logger.log("✅ Test complete. Check if you received a real text.");
+    Logger.log("Test complete. Check if you received a real text.");
   
     // 6. Clean up
     SpreadsheetApp.flush();
@@ -195,7 +195,7 @@ function test_preventDuplicateTexts() {
         if (georgeRows !== 0) throw new Error("❌ Test failed: Unexpected text was queued.");
         if (errorRows <= 0) throw new Error("❌ Test failed: Missing error row.");
 
-        Logger.log("✅ Test passed. Cleaning up test sheets...");
+        Logger.log("Test passed. Cleaning up test sheets...");
 
         // Clean up
         const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -267,7 +267,7 @@ function test_processNewCandidate_pass() {
 
 function test_processNewCandidates_batch() {
     FLAGS.IN_TEST_MODE = true;
-    logError("🧪 Running test_processNewCandidates_batch");
+    logError("TEST", "Running test_processNewCandidates_batch");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
     const tempCandidateSheet = ss.insertSheet("TempCandidate_Batch");
@@ -313,7 +313,7 @@ function test_processNewCandidates_batch() {
         tempGeorgeSheet,
         null,
         fakeCheckDriverStats,
-        // simulateSendAndClearTextGeorge // ✅ testCleanupHook
+        // simulateSendAndClearTextGeorge // testCleanupHook
       );
   
       // === ASSERTIONS ===
@@ -364,7 +364,7 @@ if (lastRow > 3) {
   tempGeorgeSheet.deleteRows(4, lastRow - 3);
 }
   
-      logError("✅ test_processNewCandidates_batch passed");
+      logError("TEST", "test_processNewCandidates_batch passed");
   
     } finally {
       ss.deleteSheet(tempCandidateSheet);
@@ -374,7 +374,7 @@ if (lastRow > 3) {
 }
 
 function test_processNewCandidates_batch_stepwise() {
-    logError("🧪 Running test_processNewCandidates_batch_stepwise");
+    logError("TEST", "🧪 Running test_processNewCandidates_batch_stepwise");
   
     const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
     const tempCandidateSheet = ss.insertSheet("TempCandidate_Batch");
@@ -423,7 +423,7 @@ function test_processNewCandidates_batch_stepwise() {
       expectEqual(data.length, 1, "Step 3: Should have 1 message queued");
       expectEqual(data[0][0], "BLACKLISTED_ID", "Step 3: Should queue BLACKLISTED_ID");
   
-      logError("✅ test_processNewCandidates_batch_stepwise passed");
+      logError("TEST", "test_processNewCandidates_batch_stepwise passed");
   
     } finally {
       // Uncomment if you want cleanup

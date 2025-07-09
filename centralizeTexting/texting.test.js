@@ -16,7 +16,7 @@ function test_sendAllTexts_unit() {
       tempSheet.getRange(4, 1, 1, 3).setValues([
         ["test-driver-1", "Hello from unit test", "Unit_convo"]
       ]);
-      // ✅ Verify the row was written before sending
+      // Verify the row was written before sending
       const data = tempSheet.getRange(4, 1, tempSheet.getLastRow() - 3, 3).getValues();
       expectEqual(data.length, 1, "Should write 1 row total");
       expectEqual(data[0][0], "test-driver-1", "First driver ID should match");
@@ -26,7 +26,7 @@ function test_sendAllTexts_unit() {
       // Simulate sending (which clears the sheet)
       sendAllTexts(tempSheet);
   
-      // ✅ Verify the row is removed
+      // Verify the row is removed
     const rowsAfterSend = tempSheet.getLastRow() - 3;
     const afterSendData = rowsAfterSend > 0
     ? tempSheet.getRange(4, 1, rowsAfterSend, 3).getValues()
@@ -37,11 +37,11 @@ function test_sendAllTexts_unit() {
       ss.deleteSheet(tempSheet);
     }
   
-    Logger.log("✅ test_sendAllTexts_unit passed");
+    Logger.log("test_sendAllTexts_unit passed");
 }
 
-function test_markTextedInGeorgeSheet_removesMatchingRow() {
-  Logger.log("✅ Starting test_markTextedInGeorgeSheet_removesMatchingRow");
+function test_markTextedInGeorgeSheetOnce_removesMatchingRow() {
+  Logger.log("Starting test_markTextedInGeorgeSheetOnce_removesMatchingRow");
 
   // Create temporary test sheets
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -63,7 +63,7 @@ function test_markTextedInGeorgeSheet_removesMatchingRow() {
     SpreadsheetApp.flush();
 
     // 3️⃣ Call the function under test
-    markTextedInGeorgeSheet(textGeorge, sentTexts);
+    markTextedInGeorgeSheetOnce(textGeorge, sentTexts);
 
     // 4️⃣ Verify: TEXT GEORGE should now be empty
     const lastRow = textGeorge.getLastRow();
@@ -72,9 +72,9 @@ function test_markTextedInGeorgeSheet_removesMatchingRow() {
       ? textGeorge.getRange(4, 1, numRows, 3).getValues()
       : [];
 
-    expectEqual(remaining.length, 0, "✅ TEXT GEORGE should be empty after cleanup");
+    expectEqual(remaining.length, 0, "TEXT GEORGE should be empty after cleanup");
 
-    Logger.log("✅ test_markTextedInGeorgeSheet_removesMatchingRow PASSED!");
+    Logger.log("test_markTextedInGeorgeSheetOnce_removesMatchingRow PASSED!");
   } finally {
     // Always clean up
     ss.deleteSheet(textGeorge);
@@ -83,7 +83,7 @@ function test_markTextedInGeorgeSheet_removesMatchingRow() {
 }
 
 function test_deleteThisTrigger_cleansUp() {
-  Logger.log("✅ Starting test_deleteThisTrigger_cleansUp");
+  Logger.log("Starting test_deleteThisTrigger_cleansUp");
 
   const testHandlerName = 'dummyTriggerFunction';
 
@@ -96,13 +96,13 @@ function test_deleteThisTrigger_cleansUp() {
     .everyMinutes(5)
     .create();
 
-  Logger.log(`✅ Created dummy trigger: ${testHandlerName}`);
+  Logger.log(`Created dummy trigger: ${testHandlerName}`);
 
   try {
     // 3️⃣ Confirm it exists
     let triggers = ScriptApp.getProjectTriggers();
     const existsBefore = triggers.some(t => t.getHandlerFunction() === testHandlerName);
-    expectTrue(existsBefore, "✅ Trigger should exist before deletion");
+    expectTrue(existsBefore, "Trigger should exist before deletion");
 
     // 4️⃣ Delete it
     deleteThisTrigger(testHandlerName);
@@ -110,9 +110,9 @@ function test_deleteThisTrigger_cleansUp() {
     // 5️⃣ Confirm it's gone
     triggers = ScriptApp.getProjectTriggers();
     const existsAfter = triggers.some(t => t.getHandlerFunction() === testHandlerName);
-    expectFalse(existsAfter, "✅ Trigger should be deleted");
+    expectFalse(existsAfter, "Trigger should be deleted");
 
-    Logger.log("✅ test_deleteThisTrigger_cleansUp PASSED!");
+    Logger.log("test_deleteThisTrigger_cleansUp PASSED!");
   } finally {
     // 6️⃣ Always clean up
     deleteThisTrigger(testHandlerName);
@@ -125,7 +125,7 @@ function dummyTriggerFunction() {
 }
 
 function test_findSendTextRow_createsTriggerAndSetsStartTime() {
-  Logger.log("✅ Starting test_findSendTextRow_createsTriggerAndSetsStartTime");
+  Logger.log("Starting test_findSendTextRow_createsTriggerAndSetsStartTime");
 
   const props = PropertiesService.getScriptProperties();
   const triggerHandler = 'markTextedInGeorgeSheet';
@@ -140,14 +140,14 @@ function test_findSendTextRow_createsTriggerAndSetsStartTime() {
 
     // 3️⃣ Check that startTime was set
     const startTime = props.getProperty('startTime');
-    expectTrue(!!startTime, "✅ startTime should be set in script properties");
+    expectTrue(!!startTime, "startTime should be set in script properties");
 
     // 4️⃣ Check that the trigger was created
     const triggers = ScriptApp.getProjectTriggers();
     const found = triggers.some(t => t.getHandlerFunction() === triggerHandler);
-    expectTrue(found, "✅ Trigger for markTextedInGeorgeSheet should exist");
+    expectTrue(found, "Trigger for markTextedInGeorgeSheet should exist");
 
-    Logger.log("✅ test_findSendTextRow_createsTriggerAndSetsStartTime PASSED!");
+    Logger.log("test_findSendTextRow_createsTriggerAndSetsStartTime PASSED!");
   } finally {
     // 5️⃣ Always clean up after the test
     deleteThisTrigger(triggerHandler);
@@ -172,23 +172,23 @@ function test_isGeorgeQueueEmpty() {
 
     // 1️⃣ Should be empty
     const emptyResult = isGeorgeQueueEmpty(tempTextGeorge);
-    expectTrue(emptyResult, "✅ Should be empty when no driver rows");
+    expectTrue(emptyResult, "Should be empty when no driver rows");
 
     // 2️⃣ Add a row
     tempTextGeorge.appendRow(["DRV999", "Test message", "TestConvo"]);
 
     // 3️⃣ Should now return false
     const notEmptyResult = isGeorgeQueueEmpty(tempTextGeorge);
-    expectFalse(notEmptyResult, "✅ Should not be empty when row exists");
+    expectFalse(notEmptyResult, "Should not be empty when row exists");
 
-    Logger.log("✅ test_isGeorgeQueueEmpty passed");
+    Logger.log("test_isGeorgeQueueEmpty passed");
   } finally {
     ss.deleteSheet(tempTextGeorge);
   }
 }
 
 function test_updateCandidateAfterText() {
-  Logger.log("✅ Running test_updateCandidateAfterText");
+  Logger.log("Running test_updateCandidateAfterText");
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
 
@@ -217,36 +217,36 @@ function test_updateCandidateAfterText() {
   }
 
   try {
-    // ✅ 1️⃣ Test REJECT
-    Logger.log("✅ Testing REJECT scenario...");
+    // 1️⃣ Test REJECT
+    Logger.log("Testing REJECT scenario...");
     const { sheet: sheetReject, testDriverId: driverIdReject } = setupTestRow();
 
     updateCandidateAfterText(driverIdReject, "REJECT", null, sheetReject);
     SpreadsheetApp.flush();
 
     const afterReject = sheetReject.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(afterReject[1], "Rejected", "✅ Master Status should be Rejected");
-    expectEqual(afterReject[22], "Fail", "✅ Prescreen Result should be Fail");
-    expectTrue(!!afterReject[17], "✅ Latest Outreach Date should be set");
+    expectEqual(afterReject[1], "Rejected", "Master Status should be Rejected");
+    expectEqual(afterReject[22], "Fail", "Prescreen Result should be Fail");
+    expectTrue(!!afterReject[17], "Latest Outreach Date should be set");
 
     ss.deleteSheet(sheetReject);
 
-    // ✅ 2️⃣ Test PASS
-    Logger.log("✅ Testing PASS scenario...");
+    // 2️⃣ Test PASS
+    Logger.log("Testing PASS scenario...");
     const { sheet: sheetPass, testDriverId: driverIdPass } = setupTestRow();
 
     updateCandidateAfterText(driverIdPass, "PASS", null, sheetPass);
     SpreadsheetApp.flush();
 
     const afterPass = sheetPass.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(afterPass[22], "Pass", "✅ Prescreen Result should be Pass");
-    expectEqual(afterPass[23], "Invited", "✅ Interview Status should be Invited");
-    expectEqual(afterPass[24], "Calendly", "✅ Source/Status should be Calendly");
-    expectTrue(!!afterPass[17], "✅ Latest Outreach Date should be set");
+    expectEqual(afterPass[22], "Pass", "Prescreen Result should be Pass");
+    expectEqual(afterPass[23], "Invited", "Interview Status should be Invited");
+    expectEqual(afterPass[24], "Calendly", "Source/Status should be Calendly");
+    expectTrue(!!afterPass[17], "Latest Outreach Date should be set");
 
     ss.deleteSheet(sheetPass);
 
-    Logger.log("✅ test_updateCandidateAfterText passed!");
+    Logger.log("test_updateCandidateAfterText passed!");
 
   } catch (err) {
     Logger.log(`❌ test_updateCandidateAfterText failed: ${err}`);
@@ -256,7 +256,7 @@ function test_updateCandidateAfterText() {
 
 // deletes from TEXT GEORGE, updates Candidate Pipeline
 function test_1processSentTexts_ENABLE_TEXTING_FALSE() {
-  Logger.log("✅ Running 1/4 test_processSentTexts ENABLE_TEXTING_true");
+  Logger.log("Running 1/4 test_processSentTexts ENABLE_TEXTING_true");
   FLAGS.ENABLE_TEXTING = false;
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -299,17 +299,17 @@ function test_1processSentTexts_ENABLE_TEXTING_FALSE() {
     // 4️⃣ Call function
     processSentTexts(tempTextGeorge, tempSentTexts, tempPipeline);
 
-    // ✅ 5️⃣ Assert TEXT GEORGE is empty
+    // 5️⃣ Assert TEXT GEORGE is empty
     const remainingRows = tempTextGeorge.getLastRow() - 3;
     expectEqual(remainingRows, 0, "TextGeorge should be empty after cleanup");
 
-    // ✅ 6️⃣ Assert Candidate Pipeline updated
+    // 6️⃣ Assert Candidate Pipeline updated
     const updatedRow = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
     expectEqual(updatedRow[1], "", "Master Status should not be updated");
     expectTrue(!!updatedRow[17], "Latest Outreach Date should be set");
     expectEqual(updatedRow[22], "Pending", "Prescreen result should be Pending");
 
-    Logger.log("✅ 1/4 test_processSentTexts passed!");
+    Logger.log("1/4 test_processSentTexts passed!");
   } finally {
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
@@ -318,7 +318,7 @@ function test_1processSentTexts_ENABLE_TEXTING_FALSE() {
 }
 
 function test_2processSentTexts_ENABLE_TEXTING_FALSE_failed() {
-  Logger.log("✅ Running 2/4 test_processSentTexts ENABLE_TEXTING_true - failed driver");
+  Logger.log("Running 2/4 test_processSentTexts ENABLE_TEXTING_true - failed driver");
   FLAGS.ENABLE_TEXTING = false;
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -362,17 +362,17 @@ function test_2processSentTexts_ENABLE_TEXTING_FALSE_failed() {
     // 4️⃣ Call function
     processSentTexts(tempTextGeorge, tempSentTexts, tempPipeline);
 
-    // ✅ 5️⃣ Assert TEXT GEORGE is empty
+    // 5️⃣ Assert TEXT GEORGE is empty
     const remainingRows = tempTextGeorge.getLastRow() - 3;
     expectEqual(remainingRows, 0, "TextGeorge should be empty after cleanup");
 
-    // ✅ 6️⃣ Assert Candidate Pipeline updated
+    // 6️⃣ Assert Candidate Pipeline updated
     const updatedRow = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
     expectEqual(updatedRow[1], "Rejected", "Master Status should not be updated");
     expectTrue(!!updatedRow[17], "Latest Outreach Date should be set");
     expectEqual(updatedRow[22],"", "Prescreen result should be blank");
 
-    Logger.log("✅ 2/4 test_processSentTexts passed!");
+    Logger.log("2/4 test_processSentTexts passed!");
   } finally {
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
@@ -382,7 +382,7 @@ function test_2processSentTexts_ENABLE_TEXTING_FALSE_failed() {
 
 // deletes from TEXT GEORGE, updates Candidate Pipeline
 function test_3processSentTexts_ENABLE_TEXTING_true() {
-  Logger.log("✅ Running 3/4 test_processSentTexts ENABLE_TEXTING_true");
+  Logger.log("Running 3/4 test_processSentTexts ENABLE_TEXTING_true");
   FLAGS.ENABLE_TEXTING = true;
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -425,17 +425,17 @@ function test_3processSentTexts_ENABLE_TEXTING_true() {
     // 4️⃣ Call function
     processSentTexts(tempTextGeorge, tempSentTexts, tempPipeline);
 
-    // ✅ 5️⃣ Assert TEXT GEORGE is empty
+    // 5️⃣ Assert TEXT GEORGE is empty
     const remainingRows = tempTextGeorge.getLastRow() - 3;
     expectEqual(remainingRows, 0, "TextGeorge should be empty after cleanup");
 
-    // ✅ 6️⃣ Assert Candidate Pipeline updated
+    // 6️⃣ Assert Candidate Pipeline updated
     const updatedRow = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
     expectEqual(updatedRow[1], "", "Master Status should not be updated");
     expectTrue(!!updatedRow[17], "Latest Outreach Date should be set");
     expectEqual(updatedRow[22], "Pending", "Prescreen result should be Pending");
 
-    Logger.log("✅ 3/4 test_processSentTexts passed!");
+    Logger.log("3/4 test_processSentTexts passed!");
   } finally {
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
@@ -445,7 +445,7 @@ function test_3processSentTexts_ENABLE_TEXTING_true() {
 }
 
 function test_4processSentTexts_ENABLE_TEXTING_true_failed() {
-  Logger.log("✅ Running 4/4 test_processSentTexts ENABLE_TEXTING_true - failed driver");
+  Logger.log("Running 4/4 test_processSentTexts ENABLE_TEXTING_true - failed driver");
   FLAGS.ENABLE_TEXTING = true;
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -489,17 +489,17 @@ function test_4processSentTexts_ENABLE_TEXTING_true_failed() {
     // 4️⃣ Call function
     processSentTexts(tempTextGeorge, tempSentTexts, tempPipeline);
 
-    // ✅ 5️⃣ Assert TEXT GEORGE is empty
+    // 5️⃣ Assert TEXT GEORGE is empty
     const remainingRows = tempTextGeorge.getLastRow() - 3;
     expectEqual(remainingRows, 0, "TextGeorge should be empty after cleanup");
 
-    // ✅ 6️⃣ Assert Candidate Pipeline updated
+    // 6️⃣ Assert Candidate Pipeline updated
     const updatedRow = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
     expectEqual(updatedRow[1], "Rejected", "Master Status should not be updated");
     expectTrue(!!updatedRow[17], "Latest Outreach Date should be set");
     expectEqual(updatedRow[22],"", "Prescreen result should be blank");
 
-    Logger.log("✅ 4/4 test_processSentTexts passed!");
+    Logger.log("4/4 test_processSentTexts passed!");
   } finally {
     ss.deleteSheet(tempTextGeorge);
     ss.deleteSheet(tempSentTexts);
@@ -509,7 +509,7 @@ function test_4processSentTexts_ENABLE_TEXTING_true_failed() {
 }
 
 function test_updateCandidateBeforeText() {
-  Logger.log("✅ Running test_updateCandidateBeforeText");
+  Logger.log("Running test_updateCandidateBeforeText");
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
   const tempPipeline = ss.insertSheet("Temp_CandidatePipeline_UpdateTest");
@@ -546,10 +546,10 @@ function test_updateCandidateBeforeText() {
     });
 
     const updated1 = tempPipeline.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(updated1[1], "Pending", "✅ Status should be Pending");
-    expectTrue(updated1[26].includes("Appended Note"), "✅ Notes should include appended text");
+    expectEqual(updated1[1], "Pending", "Status should be Pending");
+    expectTrue(updated1[26].includes("Appended Note"), "Notes should include appended text");
 
-    Logger.log("✅ CASE 1 PASSED - Normal driver");
+    Logger.log("CASE 1 PASSED - Normal driver");
 
     /**
      * === CASE 2️⃣: Blacklisted driver - sets Blacklisted and appends note
@@ -569,12 +569,12 @@ function test_updateCandidateBeforeText() {
     });
 
     const updated2 = tempPipeline.getRange(5, 1, 1, 52).getValues()[0];
-    expectEqual(updated2[1], "Blacklisted", "✅ Status should be Blacklisted");
-    expectTrue(updated2[26].includes("BLACKLISTED Note"), "✅ Notes should include blacklist note");
+    expectEqual(updated2[1], "Blacklisted", "Status should be Blacklisted");
+    expectTrue(updated2[26].includes("BLACKLISTED Note"), "Notes should include blacklist note");
 
-    Logger.log("✅ CASE 2 PASSED - Blacklisted driver");
+    Logger.log("CASE 2 PASSED - Blacklisted driver");
 
-    Logger.log("✅ test_updateCandidateBeforeText COMPLETED!");
+    Logger.log("test_updateCandidateBeforeText COMPLETED!");
   } finally {
     ss.deleteSheet(tempPipeline);
   }
@@ -582,7 +582,7 @@ function test_updateCandidateBeforeText() {
 
 // big integration test for classifying rows and queueing to TEXT GEORGE
 function test_processNewCandidatesFromRows() {
-  Logger.log("✅ Running test_processNewCandidatesFromRows");
+  Logger.log("Running test_processNewCandidatesFromRows");
   FLAGS.ENABLE_TEXTING = false;
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -620,7 +620,7 @@ function test_processNewCandidatesFromRows() {
     blacklistRow[26] = "BLACKLISTED";  // triggers isBlacklisted()
 
     tempPipeline.getRange(4, 1, 3, 52).setValues([passRow, failRow, blacklistRow]);
-    // ✅ Setup TEXT GEORGE and SENT TEXTS headers
+    // Setup TEXT GEORGE and SENT TEXTS headers
     tempTextGeorge.getRange(3, 1, 1, 3).setValues([["Driver ID", "Message", "Convo"]]);
     tempSentTexts.getRange(3, 1, 1, 4).setValues([["Date", "Driver ID", "Convo", "Message"]]);
     
@@ -634,22 +634,21 @@ function test_processNewCandidatesFromRows() {
       (driverId) => driverId === "DRV_BLACKLIST" ? "BLACKLISTED" : "" // custom checkDriverStatsFn
     );
     
-
-    // ✅ 4️⃣ Check TEXT GEORGE
+    //  4️⃣ Check TEXT GEORGE
     const numQueued = tempTextGeorge.getLastRow() - 3;
-    expectTrue(numQueued > 0, "✅ Should have at least 1 queued row in TEXT GEORGE");
+    expectTrue(numQueued > 0, "Should have at least 1 queued row in TEXT GEORGE");
 
     const queuedRows = numQueued > 0
       ? tempTextGeorge.getRange(4, 1, numQueued, 3).getValues()
       : [];
-    expectEqual(queuedRows.length, 3, "✅ Should queue 3 texts");
+    expectEqual(queuedRows.length, 3, "Should queue 3 texts");
 
     const convoNames = queuedRows.map(row => row[2]);
     expectTrue(convoNames.includes(CONFIG.convoNames.prescreenFormText), "Includes prescreen text");
     expectTrue(convoNames.includes(CONFIG.convoNames.initial_criteria_reject), "Includes reject text");
     expectTrue(convoNames.includes(CONFIG.convoNames.blacklist_reject), "Includes blacklist text");
 
-    // ✅ 5️⃣ Check Candidate Pipeline updates
+    // 5️⃣ Check Candidate Pipeline updates
     const updatedRows = tempPipeline.getRange(4, 1, 3, 52).getValues();
 
     const passUpdated = updatedRows.find(r => r[9] === "DRV_PASS");
@@ -665,8 +664,8 @@ function test_processNewCandidatesFromRows() {
     const blacklistUpdated = updatedRows.find(r => r[9] === "DRV_BLACKLIST");
     expectEqual(blacklistUpdated[1], "Rejected", "Blacklist row should have Rejected status");
     expectTrue(blacklistUpdated[26].includes("BLACKLISTED"), "Blacklist notes should include BLACKLISTED");
-    expectEqual(blacklistUpdated[17], "", "✅ Blacklist row should NOT have Latest Outreach");
-    Logger.log("✅ test_processNewCandidatesFromRows passed!");
+    expectEqual(blacklistUpdated[17], "", "Blacklist row should NOT have Latest Outreach");
+    Logger.log("test_processNewCandidatesFromRows passed!");
 
   } finally {
     ss.deleteSheet(tempPipeline);
@@ -677,7 +676,7 @@ function test_processNewCandidatesFromRows() {
 
 // real flag ON — end-to-end, from queuing → sending → SENT TEXTS → deletion
 function test_sendREALAndCleanupIntegration() {
-  Logger.log("✅ Starting test_sendAndCleanupIntegration");
+  Logger.log("Starting test_sendAndCleanupIntegration");
 
   FLAGS.ENABLE_TEXTING = true;
 
@@ -687,8 +686,8 @@ function test_sendREALAndCleanupIntegration() {
   const textGeorgeSheet = CONFIG.sheets.textGeorge;
   const sentTextsSheet = CONFIG.sheets.sentTexts;
 
-  // ✅ 0. PRECHECK: Ensure TEXT GEORGE is empty
-  Logger.log("✅ Checking TEXT GEORGE is empty before starting");
+  // 0. PRECHECK: Ensure TEXT GEORGE is empty
+  Logger.log("Checking TEXT GEORGE is empty before starting");
   const lastRow = textGeorgeSheet.getLastRow();
   if (lastRow > 3) {
     const numRows = lastRow - 3;
@@ -698,19 +697,19 @@ function test_sendREALAndCleanupIntegration() {
     }
   }
 
-  // ✅ 1. Queue the message in TEXT GEORGE
-  Logger.log("✅ Queuing message in TEXT GEORGE");
+  // 1. Queue the message in TEXT GEORGE
+  Logger.log("Queuing message in TEXT GEORGE");
   textGeorgeSheet.appendRow([driverId, testMessage, convoName]);
   SpreadsheetApp.flush();
   Utilities.sleep(3000);
 
-  // ✅ 2. Call sendAllTexts() to simulate sending
-  Logger.log("✅ Calling sendAllTexts()");
+  // 2. Call sendAllTexts() to simulate sending
+  Logger.log("Calling sendAllTexts()");
   sendAllTexts();
   Utilities.sleep(5000);
 
-  // ✅ 3. Confirm it's in SENT TEXTS
-  Logger.log("✅ Checking if message was logged in SENT TEXTS");
+  // 3. Confirm it's in SENT TEXTS
+  Logger.log("Checking if message was logged in SENT TEXTS");
   let foundInSentTexts = false;
   const maxAttempts = 10;
   const sleepTime = 2000;
@@ -725,16 +724,16 @@ function test_sendREALAndCleanupIntegration() {
     if (foundInSentTexts) break;
   }
 
-  expectTrue(foundInSentTexts, "✅ Expected text to be logged in SENT TEXTS");
+  expectTrue(foundInSentTexts, "Expected text to be logged in SENT TEXTS");
 
-  // ✅ 4. Simulate the trigger by calling markTextedInGeorgeSheet
-  Logger.log("✅ Running markTextedInGeorgeSheet manually");
+  // 4. Simulate the trigger by calling markTextedInGeorgeSheet
+  Logger.log("Running markTextedInGeorgeSheet manually");
   markTextedInGeorgeSheet(textGeorgeSheet, sentTextsSheet);
   SpreadsheetApp.flush();
   Utilities.sleep(3000);
 
-  // ✅ 5. Confirm it's removed from TEXT GEORGE
-  Logger.log("✅ Checking that row was deleted from TEXT GEORGE");
+  // 5. Confirm it's removed from TEXT GEORGE
+  Logger.log("Checking that row was deleted from TEXT GEORGE");
   const lastRowAfter = textGeorgeSheet.getLastRow();
   const numRowsAfter = Math.max(0, lastRowAfter - 3);
   let georgeRows = [];
@@ -743,13 +742,13 @@ function test_sendREALAndCleanupIntegration() {
   }
 
   const stillExists = georgeRows.some(row => row[0] === driverId);
-  expectFalse(stillExists, "✅ Row should be deleted from TEXT GEORGE after cleanup");
+  expectFalse(stillExists, "Row should be deleted from TEXT GEORGE after cleanup");
 
-  Logger.log("✅ test_sendAndCleanupIntegration PASSED!");
+  Logger.log("test_sendAndCleanupIntegration PASSED!");
 }
 
 function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
-  Logger.log("✅ Running test_markTextedInGeorgeSheet_andUpdatePipeline_allCases");
+  Logger.log("Running test_markTextedInGeorgeSheet_andUpdatePipeline_allCases");
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
   const textGeorge = ss.insertSheet("Temp_TextGeorge_AllCases");
@@ -757,7 +756,7 @@ function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
   const candidatePipeline = ss.insertSheet("Temp_CandidatePipeline_AllCases");
 
   try {
-    // === ✅ HEADERS
+    // === HEADERS
     textGeorge.getRange(3, 1, 1, 3).setValues([["Driver ID", "Message", "Convo"]]);
     sentTexts.getRange(3, 1, 1, 4).setValues([["Date", "Driver ID", "Convo", "Message"]]);
 
@@ -770,7 +769,7 @@ function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
     headers[24] = "Source";
     candidatePipeline.getRange(3, 1, 1, 52).setValues([headers]);
 
-    // === ✅ DATA SETUP
+    // === DATA SETUP
     const drivers = [
       { id: "DRV_PASS_001", convo: "TestConvo_PASS", message: "Test Message PASS", status: "PASS" },
       { id: "DRV_FAIL_001", convo: "TestConvo_FAIL", message: "Test Message FAIL", status: "REJECT" },
@@ -790,38 +789,38 @@ function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
 
     SpreadsheetApp.flush();
 
-    // ✅ --- Step 1: markTextedInGeorgeSheet (removes from TEXT GEORGE)
+    // --- Step 1: markTextedInGeorgeSheet (removes from TEXT GEORGE)
     markTextedInGeorgeSheet(textGeorge, sentTexts);
     SpreadsheetApp.flush();
 
     const remainingRows = textGeorge.getLastRow() - 3;
-    expectEqual(remainingRows, 0, "✅ TEXT GEORGE should be empty after markTextedInGeorgeSheet");
+    expectEqual(remainingRows, 0, "TEXT GEORGE should be empty after markTextedInGeorgeSheet");
 
-    // ✅ --- Step 2: For each driver, update pipeline
+    // --- Step 2: For each driver, update pipeline
     drivers.forEach(d => {
       updateCandidateAfterText(d.id, d.status, null, candidatePipeline);
     });
     SpreadsheetApp.flush();
 
-    // ✅ --- Step 3: Validate Pipeline Updates
+    // --- Step 3: Validate Pipeline Updates
     const data = candidatePipeline.getRange(4, 1, candidatePipeline.getLastRow() - 3, 52).getValues();
 
     data.forEach(row => {
       const driverId = row[9];
       if (driverId.includes("PASS")) {
-        expectEqual(row[1], "Pending", "✅ PASS Master Status should be Pending");
-        expectEqual(row[22], "Pass", "✅ PASS Prescreen Result");
-        expectEqual(row[23], "Invited", "✅ PASS Interview Status");
-        expectEqual(row[24], "Calendly", "✅ PASS Source");
-        expectTrue(!!row[17], "✅ PASS Latest Outreach Date set");
+        expectEqual(row[1], "Pending", "PASS Master Status should be Pending");
+        expectEqual(row[22], "Pass", "PASS Prescreen Result");
+        expectEqual(row[23], "Invited", "PASS Interview Status");
+        expectEqual(row[24], "Calendly", "PASS Source");
+        expectTrue(!!row[17], "PASS Latest Outreach Date set");
       } else if (driverId.includes("FAIL")) {
-        expectEqual(row[1], "Rejected", "✅ FAIL Master Status should be Rejected");
-        expectEqual(row[22], "Fail", "✅ FAIL Prescreen Result");
-        expectTrue(!!row[17], "✅ FAIL Latest Outreach Date set");
+        expectEqual(row[1], "Rejected", "FAIL Master Status should be Rejected");
+        expectEqual(row[22], "Fail", "FAIL Prescreen Result");
+        expectTrue(!!row[17], "FAIL Latest Outreach Date set");
       } else if (driverId.includes("BLACKLIST")) {
-        expectEqual(row[1], "Rejected", "✅ BLACKLIST Master Status should be Rejected");
-        expectEqual(row[22], "Fail", "✅ BLACKLIST Prescreen Result");
-        expectTrue(!!row[17], "✅ BLACKLIST Latest Outreach Date set");
+        expectEqual(row[1], "Rejected", "BLACKLIST Master Status should be Rejected");
+        expectEqual(row[22], "Fail", "BLACKLIST Prescreen Result");
+        expectTrue(!!row[17], "BLACKLIST Latest Outreach Date set");
       } else {
         throw new Error(`❌ Unexpected driver in candidate pipeline: ${driverId}`);
       }
@@ -830,14 +829,14 @@ function test_markTextedInGeorgeSheet_andUpdatePipeline_allCases() {
     Logger.log("✅ test_markTextedInGeorgeSheet_andUpdatePipeline_allCases PASSED!");
 
   } finally {
-    // ss.deleteSheet(textGeorge);
-    // ss.deleteSheet(sentTexts);
-    // ss.deleteSheet(candidatePipeline);
+    ss.deleteSheet(textGeorge);
+    ss.deleteSheet(sentTexts);
+    ss.deleteSheet(candidatePipeline);
   }
 }
 
 function test_markTextedInGeorgeSheetOnce_returnsMatchedIds() {
-  Logger.log("✅ Running test_markTextedInGeorgeSheetOnce_returnsMatchedIds");
+  Logger.log("Running test_markTextedInGeorgeSheetOnce_returnsMatchedIds");
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
   const textGeorge = ss.insertSheet("Temp_TextGeorge_Test");
@@ -850,11 +849,11 @@ function test_markTextedInGeorgeSheetOnce_returnsMatchedIds() {
 
     // 2️⃣ Add data:
     // TEXT GEORGE rows
-    textGeorge.appendRow(["DRV_MATCH", "Hello there", "TestConvo"]);
+    textGeorge.appendRow(["DRV_MATCH", "Hello there", "TestConvo_20250704"]);
     textGeorge.appendRow(["DRV_NO_MATCH", "Unsent message", "TestConvo"]);
 
     // SENT TEXTS row
-    sentTexts.appendRow([new Date(), "DRV_MATCH", "TestConvo", "Hello there"]);
+    sentTexts.appendRow([new Date(), "DRV_MATCH", "TestConvo_20250704", "Hello there"]);
 
     SpreadsheetApp.flush();
 
@@ -863,15 +862,15 @@ function test_markTextedInGeorgeSheetOnce_returnsMatchedIds() {
     SpreadsheetApp.flush();
 
     // 4️⃣ Check returned IDs
-    expectEqual(matched.length, 1, "✅ Should return exactly 1 matched ID");
-    expectEqual(matched[0], "DRV_MATCH", "✅ Should return DRV_MATCH as matched ID");
+    expectEqual(matched.length, 1, "Should return exactly 1 matched ID");
+    expectEqual(matched[0], "DRV_MATCH", "Should return DRV_MATCH as matched ID");
 
     // 5️⃣ Check remaining TEXT GEORGE rows
     const remaining = textGeorge.getRange(4, 1, textGeorge.getLastRow() - 3, 3).getValues();
-    expectEqual(remaining.length, 1, "✅ Should have 1 row left after deletion");
-    expectEqual(remaining[0][0], "DRV_NO_MATCH", "✅ Remaining row should be DRV_NO_MATCH");
+    expectEqual(remaining.length, 1, "Should have 1 row left after deletion");
+    expectEqual(remaining[0][0], "DRV_NO_MATCH", "Remaining row should be DRV_NO_MATCH");
 
-    Logger.log("✅ test_markTextedInGeorgeSheetOnce_returnsMatchedIds PASSED!");
+    Logger.log("test_markTextedInGeorgeSheetOnce_returnsMatchedIds PASSED!");
   } finally {
     ss.deleteSheet(textGeorge);
     ss.deleteSheet(sentTexts);
@@ -879,7 +878,7 @@ function test_markTextedInGeorgeSheetOnce_returnsMatchedIds() {
 }
 
 function test_queueTextRowFreezesMessage() {
-  Logger.log("✅ Running test_queueTextRowFreezesMessage");
+  Logger.log("Running test_queueTextRowFreezesMessage");
 
   // Setup
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
@@ -899,11 +898,11 @@ function test_queueTextRowFreezesMessage() {
 
     // Assert
     const queuedRow = tempTextGeorge.getRange(4, 1, 1, 3).getValues()[0];
-    expectEqual(queuedRow[0], testDriverId, "✅ Driver ID matches");
-    expectEqual(queuedRow[1], testMessage, "✅ Message was frozen exactly");
-    expectEqual(queuedRow[2], testConvoName, "✅ Convo name was frozen exactly");
+    expectEqual(queuedRow[0], testDriverId, "Driver ID matches");
+    expectEqual(queuedRow[1], testMessage, "Message was frozen exactly");
+    expectEqual(queuedRow[2], testConvoName, "Convo name was frozen exactly");
 
-    Logger.log("✅ test_queueTextRowFreezesMessage PASSED!");
+    Logger.log("test_queueTextRowFreezesMessage PASSED!");
   } finally {
     ss.deleteSheet(tempTextGeorge);
   }

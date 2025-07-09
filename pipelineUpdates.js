@@ -1,15 +1,3 @@
-// Purpose: Scans new candidates → updates status, adds to queue, and triggers flush.
-//processNewCandidatesFromRows_OLD
-
-function isGeorgeQueueEmpty(textSheetOverride = null) {
-  const sheet = textSheetOverride || CONFIG.sheets.textGeorge;
-  const lastRow = sheet.getLastRow();
-  if (lastRow <= 3) return true;
-
-  const data = sheet.getRange(4, 1, lastRow - 3, 4).getValues();
-  return data.every(row => !row[0] || row[3] === "TO BE REMOVED");
-}
-
 function writeToTextGeorge(driverIds, message, convoName, textSheetOverride = null) {
   const sheet = textSheetOverride || CONFIG.sheets.textGeorge;
   const unique = [...new Set(driverIds)];
@@ -86,6 +74,6 @@ function runPrescreenFollowUp(sheet = null) {
     }
   });
 
-  Logger.log("✅ Prescreen follow-up run complete.");
+  Logger.log("Prescreen follow-up run complete.");
 }
 

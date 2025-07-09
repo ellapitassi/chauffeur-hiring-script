@@ -37,9 +37,9 @@ function test_queueSingleDriverText() {
   const ss = SpreadsheetApp.openById(CONFIG.sheetIds.massText);
   const today = Utilities.formatDate(new Date(), "America/Chicago", "MM/dd/yyyy");
 
-  Logger.log("✅ Setting up test sheets...");
+  Logger.log("Setting up test sheets...");
 
-  // ✅ Setup TEXT GEORGE TEST sheet
+  // Setup TEXT GEORGE TEST sheet
   const tempTextGeorge = ss.getSheetByName("TextGeorgeTest") || ss.insertSheet("TextGeorgeTest");
   tempTextGeorge.clear();
   tempTextGeorge.appendRow([
@@ -48,7 +48,7 @@ function test_queueSingleDriverText() {
     "CONVERSATION NAME"      // C (3)
   ]);
 
-  // ✅ Setup SENT TEXTS TEST sheet
+  // Setup SENT TEXTS TEST sheet
   const tempSentTexts = ss.getSheetByName("SentTextsTest") || ss.insertSheet("SentTextsTest");
   tempSentTexts.clear();
   tempSentTexts.appendRow([
@@ -58,7 +58,7 @@ function test_queueSingleDriverText() {
     "text"        // D (4)
   ]);
 
-  // ✅ Setup CANDIDATE PIPELINE TEST sheet
+  // Setup CANDIDATE PIPELINE TEST sheet
   const pipelineSheet = ss.getSheetByName("PipelineTest") || ss.insertSheet("PipelineTest");
   pipelineSheet.clear();
   pipelineSheet.appendRow([
@@ -77,7 +77,7 @@ function test_queueSingleDriverText() {
     LATEST_OUTREACH: 16
   };
 
-  Logger.log("✅ ---- TEST 1: Queue first time (should succeed) ----");
+  Logger.log("---- TEST 1: Queue first time (should succeed) ----");
 
   const result1 = queueSingleDriverText({
     driverId: "123",
@@ -91,15 +91,15 @@ function test_queueSingleDriverText() {
     candidatePipeline: pipelineSheet
   });
 
-  Logger.log(`✅ First call result (should be true): ${result1}`);
+  Logger.log(`First call result (should be true): ${result1}`);
 
-  // ✅ Check TEXT GEORGE contents
+  // Check TEXT GEORGE contents
   const queuedData = tempTextGeorge.getDataRange().getValues();
   Logger.log(`📋 TEXT GEORGE after first append:\n${JSON.stringify(queuedData)}`);
 
-  Logger.log("✅ ---- Simulating 'sending' the message ----");
+  Logger.log(" ---- Simulating 'sending' the message ----");
 
-  // ✅ Move message to SENT TEXTS to simulate sending
+  // Move message to SENT TEXTS to simulate sending
   tempSentTexts.appendRow([
     today,                   // A = DATE TIME
     "123",                   // B = DRIVER ID
@@ -107,7 +107,7 @@ function test_queueSingleDriverText() {
     "Hello Test Message!"    // D = text
   ]);
 
-  // ✅ Clear TEXT GEORGE (like production would after sending)
+  // Clear TEXT GEORGE (like production would after sending)
   tempTextGeorge.clear();
   tempTextGeorge.appendRow([
     "DRIVERS TO BE TEXTED",
@@ -115,7 +115,7 @@ function test_queueSingleDriverText() {
     "CONVERSATION NAME"
   ]);
 
-  Logger.log("✅ ---- TEST 2: Attempt duplicate queue (should be blocked) ----");
+  Logger.log(" ---- TEST 2: Attempt duplicate queue (should be blocked) ----");
 
   const result2 = queueSingleDriverText({
     driverId: "123",
@@ -129,14 +129,14 @@ function test_queueSingleDriverText() {
     candidatePipeline: pipelineSheet
   });
 
-  Logger.log(`✅ Second call result (should be false): ${result2}`);
+  Logger.log(`Second call result (should be false): ${result2}`);
 
-  // ✅ Final contents for inspection
+  // Final contents for inspection
   const finalQueuedData = tempTextGeorge.getDataRange().getValues();
   const finalSentData = tempSentTexts.getDataRange().getValues();
 
   Logger.log(`📋 FINAL TEXT GEORGE:\n${JSON.stringify(finalQueuedData)}`);
   Logger.log(`📋 FINAL SENT TEXTS:\n${JSON.stringify(finalSentData)}`);
 
-  Logger.log("✅ Test complete!");
+  Logger.log("Test complete!");
 }

@@ -173,3 +173,21 @@ doPost(e)
               ├── Check pipeline
               ├── Call appendMassTextRow() for interview/convo
               └── (Previously sent directly — now queued)
+
+
+[Form Submit]
+   ↓
+onFormSubmit(e)
+   ↓
+handleFormSubmission()
+   ↓
+IF FAIL:
+   handleFormFail()
+       ├── Update Pipeline
+       ├── Queue Text in TEXT GEORGE
+       └── sendAllTextsWithLock()
+           ├── Acquire Lock
+           ├── Send All Pending
+           ├── Mark as Sent
+           ├── Clean Up
+           └── Release Lock

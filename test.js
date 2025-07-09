@@ -110,7 +110,7 @@ function test_updateCandidateRowInterviewStatusByEmail() {
 
 function testLogDetailedError() {
   logDetailedError({
-    driverId: "TEST123",
+    driverId: "TEST",
     message: "Test error message",
     context: "TestContext",
     details: "This is a test to confirm logging works"

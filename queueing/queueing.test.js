@@ -9,34 +9,6 @@ function deleteTestSheets(...sheets) {
   });
 }
 
-function test_getCandidateRows() {
-  Logger.log("Running test_getCandidateRows");
-  const { testPipeline, testTextGeorge, testSentTexts } = getTestSheets(1);
-
-  try {
-    // Write 2 fake rows with 52 columns each
-    const row1 = new Array(52).fill("");
-    row1[0] = "ID1";
-    const row2 = new Array(52).fill("");
-    row2[0] = "ID2";
-
-    testPipeline.getRange(4, 1, 2, 52).setValues([row1, row2]);
-
-    // Call function
-    const rows = getCandidateRows(testPipeline, 4, 2);
-
-    if (rows.length !== 2) throw new Error("❌ Expected 2 rows");
-    if (rows[0][0] !== "ID1") throw new Error("❌ Expected first row to start with ID1");
-    if (rows[1][0] !== "ID2") throw new Error("❌ Expected second row to start with ID2");
-
-    Logger.log("✅ test_getCandidateRows passed!");
-
-  } finally {
-    // Always clean up
-    deleteTestSheets(testPipeline, testTextGeorge, testSentTexts);
-  }
-}
-
 function test_classifyCandidateRow() {
     Logger.log("Running test_classifyCandidateRow");
 
@@ -116,7 +88,7 @@ function test_queueTextRow() {
 function test_processSingleCandidateRow() {
   Logger.log("Running test_processSingleCandidateRow");
 
-  // ✅ Fixed test date for stable test
+  // Fixed test date for stable test
   const staticTestDate = new Date(2025, 6, 2); // July 2, 2025
   const todayFormatted = Utilities.formatDate(staticTestDate, "America/Chicago", "MM/dd/yyyy");
 
@@ -156,11 +128,11 @@ function test_processSingleCandidateRow() {
 
     // Assert 1️⃣ TEXT GEORGE got the message
     const queuedRow = testTextGeorge.getRange(4, 1, 1, 3).getValues()[0];
-    expectEqual(queuedRow[0], "DRV100", "✅ DriverId in TEXT GEORGE");
+    expectEqual(queuedRow[0], "DRV100", "DriverId in TEXT GEORGE");
 
     // Assert 2️⃣ CandidatePipeline updated
     const updatedRow = testPipeline.getRange(4, 1, 1, 52).getValues()[0];
-    expectEqual(updatedRow[COL.STATUS], "Pending", "✅ STATUS is Pending");
+    expectEqual(updatedRow[COL.STATUS], "Pending", "STATUS is Pending");
 
     const firstOutreachFormatted = Utilities.formatDate(
       new Date(updatedRow[COL.FIRST_OUTREACH]),
@@ -169,10 +141,10 @@ function test_processSingleCandidateRow() {
     );
     const latestOutreachFormatted = Utilities.formatDate(new Date(updatedRow[COL.LATEST_OUTREACH]), "America/Chicago", "MM/dd/yyyy");
 
-    expectEqual(firstOutreachFormatted, todayFormatted, "✅ First Outreach date matches");
-    expectEqual(latestOutreachFormatted, todayFormatted, "✅ Latest Outreach date matches");
+    expectEqual(firstOutreachFormatted, todayFormatted, "First Outreach date matches");
+    expectEqual(latestOutreachFormatted, todayFormatted, "Latest Outreach date matches");
 
-    Logger.log("✅ test_processSingleCandidateRow passed!");
+    Logger.log("test_processSingleCandidateRow passed!");
   } finally {
     // Always clean up
     // deleteTestSheets(testPipeline, testTextGeorge, testSentTexts);
