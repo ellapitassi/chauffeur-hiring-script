@@ -44,5 +44,5 @@ function processSentTexts(textGeorge = CONFIG.sheets.textGeorge, sentTexts = CON
     updateOutreachDatesAndPrescreen(driverId, pipelineOverride);
   }
 
-  logError(`✅ processSentTexts complete. Updated ${confirmedDriverIds.length} driver(s).`);
+  logError(`processSentTexts complete. Updated ${confirmedDriverIds.length} driver(s).`);
 }

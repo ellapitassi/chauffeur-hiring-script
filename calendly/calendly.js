@@ -17,12 +17,11 @@ function doPost(e, calendlySheetOverride = null, candidatePipelineOverride = nul
   let email = '';  // define upfront
 
   try {
-    // TEMP: Log the full incoming structure
     data = JSON.parse(e.postData.contents);
     const payload = data.payload || {};
     const eventType = data.event || '';
     email = payload.email?.trim();
-    console.log("***eventType", eventType)
+
     const name = payload.name || '';
     const scheduledEvent = payload.scheduled_event || {};
     const eventName = scheduledEvent.name || '';

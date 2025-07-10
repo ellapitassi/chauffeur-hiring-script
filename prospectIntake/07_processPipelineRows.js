@@ -61,7 +61,7 @@ function processNewCandidatesFromRows(
         FIRST_OUTREACH: 16,     
         LATEST_OUTREACH: 17,    
         PRESCREEN_RESULTS: 22,  
-        NOTES: 27               
+        NOTES: 26               
     };
     // get candidate rows
     const rows = candidatePipeline.getRange(startRow, 1, rowCount, candidatePipeline.getLastColumn()).getValues();

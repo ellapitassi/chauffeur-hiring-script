@@ -71,3 +71,19 @@ function makeSafeSheetDate(baseDate) {
   d.setHours(12, 0, 0, 0);
   return d;
 }
+
+function makeSafeSheetDateChi(input) {
+  let baseDate;
+  if (Object.prototype.toString.call(input) === "[object Date]") {
+    baseDate = input;
+  } else {
+    baseDate = new Date(input);
+  }
+
+  if (isNaN(baseDate.getTime())) {
+    throw new Error(`Invalid date passed to makeSafeSheetDate: ${input}`);
+  }
+
+  // Force it to noon local time to avoid DST boundary errors
+  return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate(), 12, 0, 0, 0);
+}

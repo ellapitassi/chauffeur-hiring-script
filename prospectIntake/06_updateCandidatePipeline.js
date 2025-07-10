@@ -14,7 +14,6 @@ function updateCandidateBeforeText({
   
     // 1️⃣ Set STATUS, col 2
     if (statusToSet) {
-      logError(`statusToSet in updateCandidateBeforeText: ${statusToSet}`)
       sheet.getRange(rowIdx, COL.STATUS + 1).setValue(statusToSet);
     }
   

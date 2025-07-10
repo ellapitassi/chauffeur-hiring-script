@@ -14,7 +14,7 @@ function updateCandidateRowInterviewStatusByEmail(email, type, dateTime = null,
   if (rowIndex === -1) {
     const timestamp = new Date();
     errorLog.appendRow([timestamp, `Email not found: ${email}`, type, dateTime || ""]);
-    Logger.log(`Email ${email} not found in candidate pipeline.`);
+    logError(`Email ${email} signed up for calendly but not found in candidate pipeline.`);
     return;
   }
 

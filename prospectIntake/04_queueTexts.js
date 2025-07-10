@@ -3,7 +3,6 @@ function queueTextRow(textGeorgeSheet, driverId, text, convoName) {
     SpreadsheetApp.flush();
     const lastRow = textGeorgeSheet.getLastRow();
     const newValues = textGeorgeSheet.getRange(lastRow, 1, 1, 3).getValues();
-    logError(`Added Row: ${JSON.stringify(newValues)} to TEXT GEORGE`);
 }
 
 // Looks in TEXT GEORGE & SENT TEXT, if text exists in either, we log error, return false else return true

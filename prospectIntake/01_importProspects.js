@@ -93,7 +93,7 @@ function handleNewProspects(
       logError(`Deleting these rows from PROSPECTS: ${prospectRowsToDelete}`);
       deleteProspectsRows(prospectRowsToDelete);
   
-      logError("DONE RUNNING handleNewProspects");
+      logError("Done handling new prospects!");
   
     } catch (e) {
       logDetailedError({
@@ -102,7 +102,7 @@ function handleNewProspects(
         details: e.stack || e.message
       });
     }
-  }
+}
 
 // getting driverIds
 function triggerGeorgeReport() {
@@ -164,7 +164,6 @@ function waitForDriverIDs(prospectsSheet, rowsToCheck, timeoutMs = 3 * 60 * 1000
 }
 
 function deleteProspectsRows(rowsToCheck, tempProspectsSheet = null) {
-    logError("in deleteProspectsRows")
       const { prospects } = getSheets()
       const prospectsSheet = tempProspectsSheet || prospects
     
